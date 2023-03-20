@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema targetNamespace="http://schemas.microsoft.com/windows/pki/2009/01/enrollmentpolicy" elementFormDefault="qualified" 
+           xmlns:xcep="http://schemas.microsoft.com/windows/pki/2009/01/enrollmentpolicy" 
+           xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="commonName" type="xs:string" />
+  <xs:element name="GetPolicies">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="client" type="xcep:Client" />
+        <xs:element name="requestFilter" nillable="true" type="xcep:RequestFilter" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetPoliciesResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="response" nillable="true" type="xcep:Response" />
+        <xs:element name="cAs" nillable="true" type="xcep:CACollection" />
+        <xs:element name="oIDs" nillable="true" type="xcep:OIDCollection" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:complexType name="Attributes">
+    <xs:sequence>
+      <xs:element ref="xcep:commonName" />
+      <xs:element name="policySchema" type="xs:unsignedInt" />
+      <xs:element name="certificateValidity" type="xcep:CertificateValidity" />
+      <xs:element name="permission" type="xcep:EnrollmentPermission" />
+      <xs:element name="privateKeyAttributes" type="xcep:PrivateKeyAttributes" />
+      <xs:element name="revision" type="xcep:Revision" />
+      <xs:element name="supersededPolicies" type="xcep:SupersededPolicies" nillable="true" />
+      <xs:element name="privateKeyFlags" type="xs:unsignedInt" nillable="true" />
+      <xs:element name="subjectNameFlags" type="xs:unsignedInt" nillable="true" />
+      <xs:element name="enrollmentFlags" type="xs:unsignedInt" nillable="true" />
+      <xs:element name="generalFlags" type="xs:unsignedInt" nillable="true" />
+      <xs:element name="hashAlgorithmOIDReference" type="xs:int" nillable="true" />
+      <xs:element name="rARequirements" type="xcep:RARequirements" nillable="true" />
+      <xs:element name="keyArchivalAttributes" type="xcep:KeyArchivalAttributes" nillable="true" />
+      <xs:element name="extensions" type="xcep:ExtensionCollection" nillable="true" />
+      <xs:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="CA">
+    <xs:sequence>
+      <xs:element name="uris" type="xcep:CAURICollection" />
+      <xs:element name="certificate" type="xs:base64Binary" />
+      <xs:element name="enrollPermission" type="xs:boolean" />
+      <xs:element name="cAReferenceID" type="xs:int" />
+      <xs:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="CACollection">
+    <xs:sequence>
+      <xs:element name="cA" type="xcep:CA" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="CAReferenceCollection">
+    <xs:sequence>
+      <xs:element name="cAReference" type="xs:int" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="CAURI">
+    <xs:sequence>
+      <xs:element name="clientAuthentication" type="xs:unsignedInt" />
+      <xs:element name="uri" type="xs:anyURI" />
+      <xs:element name="priority" type="xs:unsignedInt" nillable="true" />
+      <xs:element name="renewalOnly" type ="xs:boolean" />
+      <xs:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="CAURICollection">
+    <xs:sequence>
+      <xs:element name="cAURI" type="xcep:CAURI" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="CertificateEnrollmentPolicy">
+    <xs:sequence>
+      <xs:element name="policyOIDReference" type="xs:int" />
+      <xs:element name="cAs" type="xcep:CAReferenceCollection" nillable="true" />
+      <xs:element name="attributes" type="xcep:Attributes" />
+      <xs:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="CertificateValidity">
+    <xs:sequence>
+      <xs:element name="validityPeriodSeconds" type="xs:unsignedLong" />
+      <xs:element name="renewalPeriodSeconds" type="xs:unsignedLong" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="Client">
+    <xs:sequence>
+      <xs:element name="lastUpdate" type="xs:dateTime" nillable="true" />
+      <xs:element name="preferredLanguage" type="xs:language" nillable="true" />
+      <xs:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="CryptoProviders">
+    <xs:sequence>
+      <xs:element name="provider" type="xs:string" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EnrollmentPermission">
+    <xs:sequence>
+      <xs:element name="enroll" type="xs:boolean" />
+      <xs:element name="autoEnroll" type="xs:boolean" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="Extension">
+    <xs:sequence>
+      <xs:element name="oIDReference" type="xs:int" />
+      <xs:element name="critical" type="xs:boolean" />
+      <xs:element name="value" type="xs:base64Binary" nillable="true" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ExtensionCollection">
+    <xs:sequence>
+      <xs:element name="extension" type="xcep:Extension" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="FilterOIDCollection">
+    <xs:sequence>
+      <xs:element name="oid" type="xs:string" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="KeyArchivalAttributes">
+    <xs:sequence>
+      <xs:element name="symmetricAlgorithmOIDReference" type="xs:int" />
+      <xs:element name="symmetricAlgorithmKeyLength" type="xs:unsignedInt" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="OID">
+    <xs:sequence>
+      <xs:element name="value" type="xs:string" />
+      <xs:element name="group" type="xs:unsignedInt" />
+      <xs:element name="oIDReferenceID" type="xs:int" />
+      <xs:element name="defaultName" type="xs:string" nillable="true" />
+      <xs:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="OIDCollection">
+    <xs:sequence>
+      <xs:element name="oID" type="xcep:OID" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="OIDReferenceCollection">
+    <xs:sequence>
+      <xs:element name="oIDReference" type="xs:int" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="PolicyCollection">
+    <xs:sequence>
+      <xs:element name="policy" type="xcep:CertificateEnrollmentPolicy" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="PrivateKeyAttributes">
+    <xs:sequence>
+      <xs:element name="minimalKeyLength" type="xs:unsignedInt" />
+      <xs:element name="keySpec" type="xs:unsignedInt" nillable="true" />
+      <xs:element name="keyUsageProperty" type="xs:unsignedInt" nillable="true" />
+      <xs:element name="permissions" type="xs:string" nillable="true" />
+      <xs:element name="algorithmOIDReference" type="xs:int" nillable="true" />
+      <xs:element name="cryptoProviders" type="xcep:CryptoProviders" nillable="true" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="RARequirements">
+    <xs:sequence>
+      <xs:element name="rASignatures" type="xs:unsignedInt" />
+      <xs:element name="rAEKUs" type="xcep:OIDReferenceCollection" nillable="true" />
+      <xs:element name="rAPolicies" type="xcep:OIDReferenceCollection" nillable="true" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="RequestFilter">
+    <xs:sequence>
+      <xs:element name="policyOIDs" type="xcep:FilterOIDCollection" nillable="true" />
+      <xs:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="Response">
+    <xs:sequence>
+      <xs:element name="policyID" type="xs:string" nillable="false" />
+      <xs:element name="policyFriendlyName" type="xs:string" nillable="true" />
+      <xs:element name="nextUpdateHours" type="xs:unsignedInt" nillable="true" />
+      <xs:element name="policiesNotChanged" type="xs:boolean" nillable="true" />
+      <xs:element name="policies" type="xcep:PolicyCollection" nillable="true" />
+      <xs:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="Revision">
+    <xs:sequence>
+      <xs:element name="majorRevision" type="xs:unsignedInt" />
+      <xs:element name="minorRevision" type="xs:unsignedInt" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="SupersededPolicies">
+    <xs:sequence>
+      <xs:element ref="xcep:commonName" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>

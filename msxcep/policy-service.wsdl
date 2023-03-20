@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions name="PolicyService" targetNamespace="http://schemas.microsoft.com/windows/pki/2009/01/enrollmentpolicy" 
+                  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
+                  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" 
+                  xmlns:xcep="http://schemas.microsoft.com/windows/pki/2009/01/enrollmentpolicy" 
+                  xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+                  xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl"
+                  xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+  <wsdl:types>
+  	<xs:schema>
+	    <xs:import namespace="http://schemas.microsoft.com/windows/pki/2009/01/enrollmentpolicy" schemaLocation="xcep.xsd"/>
+      <xs:import namespace="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" schemaLocation="oasis-200401-wss-wssecurity-secext-1.0.xsd"/>
+	  </xs:schema>
+  </wsdl:types>
+  <wsdl:message name="IPolicy_GetPolicies_InputMessage">
+    <wsdl:part name="request" element="xcep:GetPolicies"/>
+  </wsdl:message>
+  <wsdl:message name="IPolicy_GetPolicies_OutputMessage">
+    <wsdl:part name="response" element="xcep:GetPoliciesResponse"/>
+  </wsdl:message>
+  <wsdl:portType name="IPolicy">
+    <wsdl:operation name="GetPolicies">
+      <wsdl:input wsaw:Action="http://schemas.microsoft.com/windows/pki/2009/01/enrollmentpolicy/IPolicy/GetPolicies" message="xcep:IPolicy_GetPolicies_InputMessage"/>
+      <wsdl:output wsaw:Action="http://schemas.microsoft.com/windows/pki/2009/01/enrollmentpolicy/IPolicy/GetPoliciesResponse" message="xcep:IPolicy_GetPolicies_OutputMessage"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="GetPoliciesBinding" type="xcep:IPolicy">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="GetPolicies">
+      <wsdl:input>
+        <soap:body parts="request" use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body parts="response" use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="GetPolicyService">
+    <wsdl:documentation>MS XCEP Web Service</wsdl:documentation>
+    <wsdl:port name="GetPoliciesPort" binding="xcep:GetPoliciesBinding">
+      <soap:address location="https://pki.example.com/msxcep/"/>
+    </wsdl:port>
+    <wsdl:port name="GetPoliciesNonSSLPort" binding="xcep:GetPoliciesBinding">
+      <soap:address location="http://pki.example.com/msxcep/"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
