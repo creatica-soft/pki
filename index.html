@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>PKI API Reference</title>
+</head>
+<body>
+    <h2>PKI API Reference</h2>
+
+    <h4>Contents</h4>
+    <h5><a href="#intro">Introduction to PKI</a></h5>
+    <h5><a href="#proto">PKI supported protocols</a></h5>
+    <h5><a href="#keys">Supported asymmetric keys</a></h5>
+
+    <h4>MS XCEP and MS WSTEP</h4>
+    <h5><a href="#msxcep">Introduction to MS XCEP</a></h5>
+    <h5><a href="#mswstep">Introduction to MS WSTEP</a></h5>
+    <h5><a href="#mmc">How to request an SSL certificate using MS Certificates MMC</a></h5>
+    <h5><a href="#cmd">How to request an SSL certificate using certreq.exe</a></h5>
+    <h5><a href="#mmc-renew">How to renew or export an SSL certificate using MS Certificates MMC</a></h5>
+
+    <h4>EST</h4>
+    <h5><a href="#est">Introduction to EST</a></h5>
+    <h5><a href="#pubkey">How to generate an RSA, DSA or ECDSA key for an SSL client certificate used in EST, CMP or SMIME</a></h5>
+    <h5><a href="#pkcs12">How to create PKCS12 certificate used in EST, CMP or SMIME</a></h5>
+    <h5><a href="#cacerts">How to obtain PKI CA certificates using curl and openssl base64 and pkcs7 commands</a></h5>
+    <h5><a href="#req">How to generate a certificate signing request (CSR) using openssl req command</a></h5>    
+    <h5><a href="#simpleenroll">How to request a new SSL certificate using curl and openssl base64 and pkcs7 commands</a></h5>
+    <h5><a href="#simplereenroll">How to renew an SSL certificate using curl and openssl base64 and pkcs7 commands</a></h5>
+
+    <h4>ACME</h4>
+    <h5><a href="#acme">Introduction to ACME</a></h5>
+    <h5><a href="#hmackey">How to request a shared secret key used in ACME for external account binding</a></h5>
+    <h5><a href="#certbot-config">How to configure acme client Certbot</a></h5>
+    <h5><a href="#certbot-create-account">How to create an account with certbot</a></h5>
+    <h5><a href="#certbot-deactivate-account">How to deactivate an account with certbot</a></h5>
+    <h5><a href="#certbot-request">How to manually request a new SSL certificate with certbot</a></h5>
+    <h5><a href="#certbot-renew">How to manually renew an SSL certificate with certbot</a></h5>
+    <h5><a href="#certbot-revoke">How to manually revoke an SSL certificate with certbot</a></h5>
+
+    <h4>CMP</h4>
+    <h5><a href="#cmp">Introduction to CMP</a></h5>   
+    <h5><a href="#pubkey">How to generate an RSA. DSA or ECDSA key for an SSL client certificate used in EST, CMP or SMIME</a></h5>
+    <h5><a href="#pkcs12">How to create PKCS12 certificate used in EST, CMP or SMIME</a></h5>
+    <h5><a href="#cmp-config">How to configure openssl3 cmp client</a></h5>
+    <h5><a href="#ir">How to request a new SSL client certificate with openssl3 cmp ir command</a></h5>
+    <h5><a href="#cr">How to request a new SSL certificate with openssl3 cmp client</a></h5>
+    <h5><a href="#kur">How to update an SSL certificate with openssl3 cmp client</a></h5>
+    <h5><a href="#rr">How to revoke an SSL certificate with openssl3 cmp client</a></h5>
+    <h5><a href="#sans">How to request a new SSL certificate with a subject alternative name (SAN) extension with openssl3 cmp client</a></h5>
+    <h5><a href="#ext">How to request a new SSL certificate with extensions with openssl3 cmp client</a></h5>
+    <h5><a href="#csr">How to request a new SSL certificate using a PKCS #10 certificate request (CSR) with openssl3 cmp client</a></h5>
+    <h5><a href="#domains">List allowed domains or check if a certain domain (CN) is allowed in CMP or EST</a></h5>
+    <h5><a href="#k8s">Simple bash script to autorenew certificates in k8s using CMP</a></h5>    
+    
+    <h4>General Topics</h4>
+    <h5><a href="#get">How to get an SSL certificate from the PKI certificate database</a></h5>
+    <h5><a href="#verify">How to verify the issued X509 certificate</a></h5>
+  
+    <h5><a href="#list">List issued, revoked or expired certificates</a></h5>
+    <h5><a href="#email">Receive email notifications about expiring certificates</a></h5>
+    <h5><a href="#domains">List allowed domains or check if a certain domain (CN) is allowed in CMP or EST</a></h5>
+
+    <h4>PKI Root and Intermediate Certificates</h4>
+    <h5><a href="pki/root_ca.pem">Root CA cert</a>. SHA1 fingerprint 46:5F:90:66:6C:19:C0:7B:0A:93:65:73:26:38:0E:F5:33:80:85:15</h5>
+    <h5><a href="pki/signing_ca.pem">Signing CA cert</a>. SHA1 fingerprint 46:44:51:44:83:4B:DC:98:3B:3C:99:BC:83:CB:62:D1:05:F3:CF:D1</h5>
+
+    <h3 id="intro">Introduction</h3>
+    <p>
+       The PKI is a partial implementation of a certificate management protocol (CMP), 
+       documented in <a href="https://datatracker.ietf.org/doc/html/rfc4210">rfc4210</a>,
+       a complete implementation of an automatic certificate management environment (ACME),
+       described in 
+       <a href="https://datatracker.ietf.org/doc/html/rfc8555">rfc8555</a> and
+       also Certificate Enrollment over Secure Transport (EST, <a href="https://datatracker.ietf.org/doc/html/rfc7030">rfc7030</a>), which is a 
+       simplified version of both Certificate Management over CMS (CMC protocol, rfc5273) and CMP (see above) as well as XML-based (SOAP) protocols MS-XCEP and MS-WSTEP to facilitate certificate enrollment from MS Windows.
+       All five protocols relies on an HTTP transport protocol.
+       CMP HTTP details are described in a separate <a href="https://datatracker.ietf.org/doc/html/rfc6712">rfc6712</a>. 
+    </p>
+    <p>
+       Therefore, in theory most common certificate operations (such as a new certificate request, an update or a revocation) 
+       should work with any compatible CMP or ACME client including MS Windows. In practice, to date it has only been tested with 
+       openssl3 cmp client and Let&#39;s Encrypt Certbot. 
+    </p>
+    <p>
+      MS-XCEP and MS-WSTEP have been tested with MS Certificates MMC as well as with certutil.exe and certreq.exe.
+    </p>
+    <p>   
+       EST can be used with just curl and openssl base64 and pkcs7 commands, openssl version 3 is not required.
+    </p>
+    <p>
+       Both CMP and ACME have been designed to accomodate various scenarious. One of them is a situation when nothing is known about a requester. 
+       To be able to authenticate such person, a shared secret is used in CMP Initialization Request (IR) or in ACME External Account Binding.
+       IR will return a client SSL certificate upon successful verification of the secret. 
+     </p>
+     <p>
+       ACME will create an account with the binding
+       that associates the shared secret with key id (a username in our implementation). 
+     </p>
+    <p>
+       In case of CMP, initialization request (IR) can used to obtain a client SSL certificate providing the same shared secret as in ACME. The client certificate is then used for most subsequent requests (CR, KUR, RR). Users could also obtain a client certificate straight from 
+       <a href="cert_request.html">cert_request.html</a>.
+    </p>
+    <p>
+      In case of ACME, we rely on the shared secrets and do require them. They may be obtained at <a href="key_request.html">key_request.html</a>.
+    </p>
+    <p>
+       EST can use both an SSL client certificate authentication and an Avifors AD username and a password submitted via a curl POST request along 
+       with a Certificate Signing Request (CSR, PKCS #10). If your username.p12 file is protected by the password, then there is no much difference
+       in terms of security, you would still need to provide it in your script. The main difference lies in a role attribute, which is part of a 
+       client certificate but is absent from Avifors AD user attributes. Therefore, if an account requires a master role, which is usually the case 
+       for BigHaiku only, then the certificate authentication should be used.
+    </p>
+    <p>
+      MS-XCEP is anoymous. MS-WSTEP uses AD LDAP example.com username and password authentication. Default user role is &quot;standard&quot;. If required, certain users may be granted &quot;master&quot; role via config file globals.php.
+    </p>
+    <p>
+       In case of CMP and EST, the SSL client certificate will have a username (sAMAccountName) as a common name (CN) and a role
+       attribute set to &quot;standard&quot;. Standard role is not allowed to request wildcasrd certificates. 
+    </p>
+    <p>
+       Master role in CMP is usually granted to a BigHaiku service account if requested using a Jira ticket.
+    </p>
+    <p>
+       ACME does not require roles because as long as we can perform a domain validation, we can issue a DV certificate, 
+       even a wildcard one. So if you're not a BigHaiku and would like to get a wildcard certificate, this is your only option besides applying
+       for a master role, which is unlikely to be granted.
+    </p>
+    <p>
+       End entity (EE) certificates other than the client certificate, will have an owner attribute set to the common name
+       of the client certificate (i.e. a username or a service account name) in CMP. In ACME, the external account binding kid will
+       be used as an owner of a certificate. The kid equals to the username as well. EST certificate is the same, it will have an owner set to
+       Avifors AD account.
+    </p>
+    <p>
+       In CMP, certificate update or revocation operations are restricted to the certificate owner. Another words, non-owner will not be
+       able to update or revoke somebody else&#39;s certificate. On the other hand, nothing will prevent a person or a service account
+       to request a certificate for the same subject because we do not enforce uniqueness of subject names.
+    </p>
+    <p>
+       EST does support renewals but does not have a revocation request in a simplified version. If you obtain a certificate using EST, you may 
+       still revoke it over CMP.
+    </p>
+
+    <h3 id="proto">PKI supported protocols</h3>
+    <p>
+       PKI supports the following protocols: ACME (rfc8555), CMP (rfc4210), EST(rfc7030), OCSP (rfc6960), Certificate Store Access via HTTP (rfc4387), MS-XCEP and MS-WSTEP.
+    </p>
+    <p>
+       ACME server listens on https://pki.example.com/acme
+    </p>
+    <p>
+       CMP server listens on https://pki.example.com/cmp
+    </p>
+    <p>
+       EST server listens on https://pki.example.com/.well-known/est There are three URIs that are supported:
+    </p>
+    <ul>
+      <li>https://pki.example.com/.well-known/est/cacerts - unauthenticated GET request to obtain PKI CA certs</li>
+      <li>https://pki.example.com/.well-known/est/simpleenroll - authenticated POST request with CSR</li>
+      <li>https://pki.example.com/.well-known/est/simplereenroll - authenticated POST request with CSR</li>
+    </ul>
+    <p>
+       OCSP server listens on http://pki.example.com/ocsp
+    </p>
+    <p>
+       Certificate Store Access via HTTP uses well-known URIs:
+    </p>
+    <ul>
+       <li>for certificates: https://pki.example.com/certificates/search.cgi?attribute=value</li>
+       <li>for CRLs: https://pki.example.com/crls/search.cgi?attribute=value</li>
+    </ul>
+    <p>
+      All x.509 attribute types listed in rfc4387 are supported: certHash, uri, iHash, iAndSHash, name, cn, sHash, sKIDHash. Remember to urlencode the attribute&#39;s value! For example, using curl:
+    </p>
+<pre>
+curl -G --data-urlencode certHash=o/69TO0NqSBBd03wDlts1bwc+AE --output cert.cer https://pki.example.com/certificates/search.cgi
+</pre>
+    <p>
+      MS-XCEP server listens on https://pki.example.com/msxcep/
+    </p>
+    <p>
+      MS-WSTEP server listens on https://pki.example.com/mswstep/
+    </p>
+
+    <h3 id="keys">Supported asymmetric keys</h3>
+    <p>
+       RSA, DSA and EC DSA keys are supported. We only support SHA1 and SHA256 as digests. No support for MD5 or others.
+       Key agreement DH keys are not supported. Please note that currently we only sign certificates using an RSA CA private key.
+    </p>
+
+    <h3 id="msxcep">Introduction to MS XCEP</h3>
+    <p>
+      MS XCEP describes the X.509 Certificate Enrollment Policy Protocol. It is XML-based protocol, more exactly SOAP 1.2 (Simple Object Access Protocol). It includes a single client request message (GetPolicies) with a server response message (GetPoliciesResponse). The response message contains MS certificate templates and CA info, including certificate enrollment URL.
+    </p>
+    <p>
+      MS Certificates MMC uses this protocol to obtain the policy. The policy can be retrieved for a user (certmgr.msc) as well as for a computer (certlm.msc). Once invoked, right click on Personal folder in the left panel, then choose &quot;All Tasks->Advanced Operations->Manage Enrollment Policies...&quot; Click &quot;Add&quot;, then enter enrollment policy server URI - https://pki.example.com/msxcep/ Select Anomynous authentication type and click &quot;Validate Server&quot;, then &quot;Add&quot;.
+    </p>
+    <p>    
+      Once the policy is added, it can also be viewed using certutil.exe. For example, 
+    </p>
+<pre>
+certutil -PolicyServer https://pki.example.com/msxcep/ -Anonymous -Policy
+certutil -v -PolicyServer https://pki.example.com/msxcep/ -Anonymous -Template
+</pre>
+    <p>
+      In MS Windows 10, the policy is stored in C:\ProgramData\Microsoft\Windows\X509Enrollment\[guid].
+    </p>
+    <p>
+      The protocol is formally documented in <a href="https://winprotocoldoc.blob.core.windows.net/productionwindowsarchives/MS-XCEP/%5bMS-XCEP%5d.pdf">https://winprotocoldoc.blob.core.windows.net/productionwindowsarchives/MS-XCEP/%5bMS-XCEP%5d.pdf</a>
+    </p>
+    
+    <h3 id="mswstep">Introduction to MS WSTEP</h3>
+    <p>
+      MS WSTEP is an extension of WS-Trust 1.3 protocol called the WS-Trust X.509v3 Token Enrollment Extensions. It allows a client to request X.509v3 certificates from a server. It also relies on SOAP 1.2. Same as MS XCEP, it is a single client request (RequestSecurityToken) and a single server response (RequestSecurityTokenResponse).
+    </p>
+    <p>
+      For a certificate request, it can use a PKCS10 certification request (aka CSR) or CMC, rfc5272 (Certificate Management over CMS, rfc3852 (Cryptographic Message Syntax)). For a certificate renewal it uses CMC.
+    </p>
+    <p>
+      MS Certificates MMC does not support a certificate revocation though.
+    </p>
+
+    <h3 id="mmc">How to request an SSL certificate using MS Certificates MMC</h3>
+    <p>
+      Open MS Certificate MMC either for a current user (certmgr.msc) or for a local computer (certlm.msc). Expand Personal folder in the left panel and right click on Certificates. Click on &quot;All Tasks->Request New Certificate...&quot;. Follow the wizard and select &quot;PKI Certificate Enrollment Policy&quot;, click &quot;Next&quot;, then check the template: GenericUser or GenericComputer for a user or machine certificate, or Email for SMIME email signing and encryption type certificate, which you may use in MS Outlook, for example, for sending confidential emails.
+    </p>
+    <p>
+      For the GenericUser or the GenericComputer template you need to add a certificate subject in a form of a common name (CN), which should have a domain name as its value, for example, test.example.internal.
+    </p>
+    
+    <p>
+      For the Email template, just check the Email box and click Enroll. Your certificate will have your email address stored in example.com Active Directory mail attribute as its subject alternative name. If you want to send signed or encrypted emails using other email addresses, you need to add them to the subject alternative name (SAN). In this case click on Details and then Properties. Then under Subject tab add Alternative Name of the type Email.
+    </p>
+
+    <h3 id="cmd">How to request an SSL certificate using certreq.exe</h3>
+    <p>
+      Alternatively, you may use certreq.exe; for example,
+    </p>
+<pre>
+certreq -enroll -policyserver * -user GenericUser
+certreq -enroll -policyserver * -user Email
+certreq -enroll -policyserver * -machine GenericComputer
+
+certreq -enroll -policyserver https://pki.example.com/msxcep/ -user GenericUser
+certreq -enroll -policyserver https://pki.example.com/msxcep/ -user Email
+certreq -enroll -policyserver https://pki.example.com/msxcep/ -machine GenericComputer
+</pre>
+
+    <h3 id="mmc-renew">How to renew or export an SSL certificate using MS Certificates MMC</h3>
+    <p>
+      If you want to renew your certificate, you may do it in two ways: either requesting a renewal with the new key or with the existing key. See the picture below. You may also export your certificate including a private key into a file in PFX (PKCS12) format.
+    </p>
+
+    <h2>EST</h2>
+    <h3 id="est">Introduction to EST</h3>
+    <p>
+      EST is the simplest certificate enrollment protocol compared to ACME or CMP. Although EST clients do exist, they are not required.
+      One may simply use curl and openssl base64 and pkcs7 commands.
+    </p>
+    <p>
+      Simplicity comes with limitations. For example, a certificate revocation is not supported. A certificate may still be revoked using CMP.
+    </p>
+    <p>
+      Both Avifors AD username and password as well as an SSL client certificate authentication are supported. An SSL client certificate carries a 
+      role attributes, which may be standard or master. Master role may request wildcard certificates. At the moment it is strickly reserved for 
+      BigHaiku. If you are not a BigHaiku, then you may use ACME to request wildcard certificates.
+    </p>
+
+    <h3 id="pubkey">How to generate an RSA, DSA or ECDSA key for an SSL client certificate used in EST, CMP or SMIME</h3>
+    <p>
+       When visiting a client certificate enrollment web page <a href="cert_request.html">cert_request.html</a>, a user is asked to
+       provide an RSA, DSA or ECDSA public key. To generate an RSA key, for example, one may use the following openssl commands:
+    </p>
+    <pre>
+openssl genrsa -out priv.key 2048
+openssl rsa -in priv.key -pubout
+    </pre>
+    <p>
+      To generate a DSA signature key, first generate DSA parameters and then the key based on the generated parameter file:
+    </p>
+    <pre>
+openssl dsaparam -out dsaparam 1024
+openssl gendsa -out priv.key dsaparam
+openssl dsa -in priv.key -pubout
+    </pre>
+    <p>
+      To generate a ECDSA signature key, one may use openssl genpkey command, indicating ec as an algorithm and a named elliptic-curve:
+    </p>
+    <pre>
+openssl genpkey -algorithm ec -pkeyopt ec_paramgen_curve:P-384 -out priv.key
+openssl ec -in priv.key -pubout
+    </pre>
+    
+    <p>
+       Just copy and paste the output of the last command. You do need to keep your private key file priv.key for a future.
+       You do want to ensure that this file is securely stored and not accessible by others. 
+    </p>
+    <p>
+       Please note that the RSA key size smaller than 2048 bits is not supported.
+    </p>
+    <p>
+       If you successfully authenticate with example.com Active Directory, and your public key is good, then you will
+       be provided with a client certificate along with two others: Signing CA and Root CA. 
+       Save all these certificates in a convenient folder. For example, for CMP in the same one where openssl.conf file is located. 
+       See <a href="#cmp">how to configure openssl3 cmp client</a>.
+    </p>
+
+    <h3 id="pkcs12">How to create PKCS12 certificate used in EST, CMP or SMIME</h3>
+    <p>
+       To combine a certificate and its private key into so-called p12 file, run
+    </p>
+    <pre>
+openssl pkcs12 -export -in username.pem -inkey priv.key -out username.p12
+    </pre>
+    <p>
+       You may now import your client certificate in .p12 file into your browser, for example, for client side SSL authentication, use it in
+       --cert option with curl or import it to your mail client such as MS Outlook to exchange signed emails. 
+    </p>
+    <p>
+      If you need to include CA certs in your p12 file, then use -chain, -untrusted and -CAfile options; for example,
+    </p>
+    <pre>
+openssl pkcs12 -export -in username.pem -inkey priv.key -out username.p12 -chain -untrusted signing_ca.pem -CAfile root_ca.pem
+    </pre>
+    <p>
+      To send an encrypted email, you need to get a certificate of a person with whom you are to communicate from a certificate store; for example, https://pki.example.com/certificates/search.cgi?uri=email or ask that person to send you a signed email.
+    </p>
+    
+    <h3 id="cacerts">How to obtain PKI CA certificates using curl and openssl base64 and pkcs7 commands</h3>
+    <p>
+      If you need to get PKI CA certificates, then simply send an unauthenticated GET request to the following URL:      
+    </p>
+    <pre>
+curl -v https://pki.example.com/.well-known/est/cacerts
+    </pre>
+    <p>
+      You will get a file cacerts.p7c, which has CA certificates wrapped in base64 encoded PCKS7 SignedData structure. To extract the CA certs, you
+      may use openssl base64 and pkcs7 commands; for example,
+    </p>
+    <pre>
+openssl base64 -d -A -in cacerts.p7c | openssl pkcs7 -inform DER -print_certs -out cacerts.pem
+    </pre>
+    <p>
+      The CA certificates will be saved in cacerts.pem in Openssl format with Subject and Issuer headers. Here is a one-liner command:
+    </p>
+    <pre>
+curl https://pki.example.com/.well-known/est/cacerts | openssl base64 -d -A | openssl pkcs7 -inform der -print_certs -out cacerts.pem
+    </pre>
+    
+    <h3 id="req">How to generate a certificate signing request (CSR) using openssl req command</h3>
+    <p>
+      Both simple enroll and simple re-enroll operations require a valid certificate signing request. It can be generated as a one-line command
+      with openssl req; for example,
+    </p>
+    <pre>
+openssl req -new -subj "/CN=test.example.internal" -addext "subjectAltName=DNS:test2.example.internal" -newkey rsa:2048 -keyout test.example.internal.key -nodes -out test.example.internal.req
+    </pre>
+    <p>
+      test.example.internal.req file is used as --data-binary argument of curl commands below.
+      If -nodes option does not work, try -noenc. Both will leave the private key unencrypted, so take care of it.
+    </p>
+
+    <h3 id="simpleenroll">How to request a new SSL certificate using curl and openssl base64 and pkcs7 commands</h3>
+    <p>
+      To enroll for a new SSL certificate, send your Certificate Signing Request (CSR) in an authenticated POST request. Here is one-liner command
+      using username and password authentication:      
+    </p>
+    <pre>
+curl -v --cacert cacerts.pem --user ADusername:password --data-binary @test.example.internal.req -H "Content-Type: application/pkcs10" https://pki.example.com/.well-known/est/simpleenroll | openssl base64 -d -A | openssl pkcs7 -inform der -print_certs -out test.example.internal.crt    
+    </pre>
+    <p>
+      To use an SSL client certificate in p12 format, run:
+    </p>
+    <pre>
+curl -v --cacert cacerts.pem --cert username.p12[:password] --data-binary @test.example.internal.req -H "Content-Type: application/pkcs10"  https://pki.example.com/.well-known/est/simpleenroll | openssl base64 -d -A | openssl pkcs7 -inform der -print_certs -out test.example.internal.crt    
+    </pre>
+    
+
+    <h3 id="simplereenroll">How to renew an SSL certificate using curl and openssl base64 and pkcs7 commands</h3>
+    <p>
+      Simple re-enroll is practically identical to simple enroll, just described above.
+    </p>
+    
+   <h2>ACME</h2>
+    <h3 id="acme">Introduction to ACME</h3>
+    <p>
+      ACME stands for Automatic Certificate Management Environment. The protocol was developed by Let&#39;s Encrypt and standardized
+      by IETF in rfc8555. It allows to securely obtain domain validation (DV) certificates, i.e. the CA first validates the 
+      ownership of an identifier (dns domain name in this case) by verifying an issued challenge (http and/or dns) and if successful,
+      only then provides a certificate for this domain.  
+    </p>
+    <p>
+      Hence, there is no need for the allowed domains list used in CMP or older PKI API version. There is also no need for the master role.
+      Wildcard certificates can be obtained the same way as long as the ownership of a parent domain is validated.
+    </p>
+    <p>
+      On the other hand, ACME is limited to provide only DV certificates. CMP can also provide certificates for IP addresses as long
+      as they are from a certain private IP range. In contrary, CMP does not validate the ownership of a domain and will issue certificates for
+      any domain from the allowed domain suffixes list.
+    </p>
+    <p>
+      ACME protocol usually involes a few transactions or network data exchanges if you wish, before the certificate can be issued. This
+      is in contrast to CMP protocol, which is able to provide a certificate after the first request. 
+    </p>
+    <p>
+      One of the advantages of ACME is the wide availability of clients and support for few popupar web servers. 
+      Compatible ACME clients must support external account binding. There are a few that do not. They will not work with our ACME
+      server. Recommended by Let&#39;s Encrypt ACME client called Certbot does support external account binding and does work with
+      our ACME server.
+    </p>
+    <p>
+      Certbot comes with some web server plugins, which make the automatic certificate installation and renewals easier. Even if
+      there is no plugin for your web server, there are various hooks that may be used in automation. Please refer to 
+      <a href="https://eff-certbot.readthedocs.io">the Certbot documentation</a> on how to automate your certificate renewals.
+    </p>
+    <p>
+      You do need to obtain the shared secret used in external account binding first. See next section.
+    </p>
+
+    <h3 id="hmackey">How to request a shared secret key used in ACME for external account binding</h3>
+    <p>
+       ACME server uses external account binding mechanism for identifying the ACME client public key used to sign the requests.
+       For more info, please see <a href="https://datatracker.ietf.org/doc/html/rfc8555#section-7.3.4">https://datatracker.ietf.org/doc/html/rfc8555#section-7.3.4</a>.
+    </p>
+    <p>
+      In order to obtain the shared secret key, please authenticate with your Avifors Active Directory username and password using
+      this link <a href="https://pki.example.com/key_request.html">https://pki.example.com/key_request.html</a>.
+    </p>
+    <p>
+      Certbot config file or command line argument for the shared secret is &quot;eab-hmac-key&quot;. 
+      Key id argument &quot;eab-kid&quot; argument is for the username.
+    </p>
+    <p>
+      The shared key can be updated using the same link anytime. Just do not forget to update the acme client config.
+    </p>
+
+    <h3 id="certbot-config">How to configure acme client Certbot</h3>
+    <p>
+      Here is a sample Certbot config file:
+    </p>
+    <pre>
+server = https://pki.example.com/acme
+#REQUESTS_CA_BUNDLE or CURL_CA_BUNDLE envvar can be set to point to ca_certs_bundle.pem
+#no-verify-ssl = true
+
+eab-kid = username
+eab-hmac-key = oCY5TB7KocFGuXIdrUMm9xNmnrwI43bMfR1e8g-MRvpMTA1ksP_nPixLK5RCbDikWC-ny5Jpzfr7jApRClCvzA
+email = username@timbredigital.co.nz
+no-eff-email
+
+key-type = rsa
+#rsa-key-size = 2048
+#key-type = ecdsa
+#elliptic-curve = secp384r1
+
+preferred-challenges = http
+agree-tos = true
+    </pre>
+   
+    <h3 id="certbot-create-account">How to create an account with certbot</h3>
+    <p>
+       ACME employs the following concepts: accounts, orders, identifiers, authorizations and challenges.
+       To create an account, issue the following command:
+    </p>
+    <pre>
+certbot register
+    </pre>
+
+    <h3 id="certbot-deactivate-account">How to deactivate an account with certbot</h3>
+    <p>
+       To deactivate an account, issue the following command:
+    </p>
+    <pre>
+certbot unregister
+    </pre>
+    <p>
+      Please refer to the detailed certboat documentation in 
+      <a href="https://eff-certbot.readthedocs.io/en/stable/using.html#certbot-commands">https://eff-certbot.readthedocs.io/en/stable/using.html#certbot-commands</a>.
+    </p>
+
+    <h3 id="certbot-request">How to manually request a new SSL certificate with certbot</h3>
+    <p>
+       This and other commands are just to demonstrate some features of Certbot. In normal circumstances, they are not required
+       to be run manually. Once properly setup, certificates will be renewed authomatically.
+    </p>
+    <p>
+       To manually request a certificate, issue the following command using -d switch for a domain identifier:
+    </p>
+    <pre>
+certbot certonly --manual -d test.example.internal
+    </pre>
+    <p>
+      Certbot client will print you a challenge; for example,
+    </p>
+    <pre>
+Create a file containing just this data:
+
+NjYxOTE4NzI2MTM2MjU4MTU4MzQyNTg3ODQ5MzUwMTUwNzM4OTI.nYi8iaXOSkMKdLRXN3mLHwuflaeqzt9Tr4ugkS5HMtw
+
+And make it available on your web server at this URL:
+
+http://test.example.internal/.well-known/acme-challenge/NjYxOTE4NzI2MTM2MjU4MTU4MzQyNTg3ODQ5MzUwMTUwNzM4OTI
+
+Press Enter to Continue
+    </pre>
+    <p>
+      Once you created the file with the given contents and ensured that ACL is open to port 80 on your web server 
+      from pki.example.com (10.165.64.95), as well as your web server was listening on non-SSL port 80, press Enter to continue.
+    </p>
+    <p>
+      If the server succeeds in verifying this challenge, the certificate will be issued.
+    </p>
+
+    <h3 id="certbot-renew">How to manually renew an SSL certificate with certbot</h3>
+    <p>
+      To renew the certificate manually, issue a command similar to the one below:
+    </p>
+    <pre>
+certbot renew -cert-name test.example.internal-0001
+    </pre>
+    <p>
+      You may obtain a list of issued certificates by
+    </p>
+    <pre>
+certbot certificates
+    </pre>
+
+    <h3 id="certbot-revoke">How to manually revoke an SSL certificate with certbot</h3>
+    <p>
+      To revoke the certificate, issue a command similar to the one below:
+    </p>
+    <pre>
+certbot revoke -cert-name test.example.internal-0001
+    </pre>
+
+
+    <h2>CMP</h2>
+    <h3 id="cmp">Introduction to CMP</h3>   
+    <p>
+      CMP stands for Certificate Management Protocol. It is fully described in rfc4210. It allows to get a certificate in a single
+      transaction, i.e. one request followed by a CMP server&#39;s response if implicit confirmation is enabled. Otherwise, there
+      are two more network packets: certificate receipt confirmation and a server&#39;s acknowledgement.
+    </p>
+    <p>
+      The only CMP client known at this point is from openssl version 3.
+    </p>
+    <p>
+      CMP supports all kinds of certificates, not just DV (domain validation) ones, which is the case for ACME protocol. On the other hand,
+      CMP has no means to validate the ownership of a domain. It can only check if a domain is from the allowed domain suffixes list.
+    </p>
+    <p>
+      Openssl CMP client is not aware of any servers that you may install your certificate on. Therefore, automating certificate renewals,
+      is something that is your responsibility. Because it is just a single openssl command, it is easy to do though.
+    </p>
+
+    <h3 id="cmp-config">How to configure openssl3 cmp client</h3>
+    <p>
+       Openssl version 3 certificate management protocol (CMP) client relies on an openssl.conf file. Here is a sample configuration
+       file with some comments that will help you to start using openssl cmp commands. Please refer to 
+       <a href="https://www.openssl.org/docs/man3.0/man1/openssl-cmp.html">openssl cmp client documentation</a> for further details.
+       To use this file, add &quot;-config openssl.conf&quot; option to &quot;openssl cmp&quot; command. This assumes that
+       the configuration file is located in the current directory.
+    </p>
+    <p>
+       Update values as needed.
+    </p>
+    
+    <pre>
+HOME			= .
+openssl_conf = openssl_init
+config_diagnostics = 1
+
+[openssl_init]
+providers = provider_sect
+
+[provider_sect]
+default = default_sect
+
+[default_sect]
+
+[cmp]
+server = pki.example.com:443
+path = cmp/
+tls_used = 1
+implicit_confirm = 0 # set to 0 for explicit certificate confirmations or 1 - for no certconf messages
+san_nodefault = 1 #to avoid having CN from the client's certificate subject to be placed in certReq certTemplate SAN extension as DNS
+cmd = cr #default command
+newkey = test.example.internal.key # rsa private key generated by "openssl genrsa -out test.example.internal.key 2048"
+subject = "/CN=test.example.internal" # subject of a certificate to request, renew or revoke
+certout = test.example.internal.crt # file where to put the issued or updated certificate
+trusted = root_ca.pem # will be provided up on client cert enrollment at https://pki.example.com/cmp/cert_request.html
+untrusted = signing_ca.pem # will be provided up on client cert enrollment at https://pki.example.com/cmp/cert_request.html
+
+# Signature-based protection and authentication
+secret = # disable PBM (shared secret)
+cert = username.pem # client certificate obtained via https://pki.example.com/cmp/cert_request.html
+key = priv.key # private key for the client certificate obtained by "openssl genrsa -out priv.key 2048"
+
+[ir]
+cmd = ir
+digest = sha1
+mac = hmac-sha1
+ref = #SenderKID
+secret = pass:LrQonrKWG3gYF0syCpt6omqbBNmnOjvp1SNJwPc9JyTKTSKDGB9GGApmmY0nC_ZUEL_dlEZK7Su7eoiqCJYKAQ
+newkey = priv.key
+subject = "/CN=username"
+certout = username.pem
+recipient = "/CN=Signing CA - G2"
+reqexts = v3_ext2
+cert = #
+key = #
+
+[p10cr]
+cmd = p10cr
+subject = 
+san_nodefault =
+newkey =
+
+[cr]
+# Certificate request (could be used with -csr option)
+cmd = cr
+
+[kur]
+# Certificate renewal (could be used with -csr option)
+cmd = kur
+oldcert = $cmp::certout # test.example.internal.crt
+subject = 
+
+[rr]
+# Certificate revocation (could be used with -csr option)
+cmd = rr
+oldcert = $cmp::certout # test.example.internal.crt
+certout = 
+newkey = 
+subject =
+san_nodefault = 
+
+[genm]
+# General messages
+cmd = genm
+certout = 
+newkey = 
+subject = 
+san_nodefault = 
+
+[v3_ext]
+# see https://www.openssl.org/docs/man3.0/man5/x509v3_config.html
+keyUsage = digitalSignature,keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = DNS:test.example.internal,DNS:test2.example.internal,IP:10.2.3.4
+
+[v3_ext2]
+keyUsage = digitalSignature
+    </pre>
+
+    <h3 id="ir">How to request a new SSL client certificate with openssl3 cmp ir command</h3>
+    <p>
+      Obtain a shared secret from <a href="https://pki.example.com/key_request.html">https://pki.example.com/key_request.html</a> authenticating with your example.com Active Directory username and password. Update openssl.conf [ir] section, especially the secret value. Generate a private key for your client certificate. Run the following command.
+    </p>
+    <pre>
+openssl genrsa -out priv.key 2048
+openssl cmp -config openssl.conf -section cmp,ir    
+    </pre>
+    <p>
+      Alternatively, obtain the SSL client certificate from this link <a href="https://pki.example.com/cert_request.html">https://pki.example.com/cert_request.html</a>
+    </p>
+
+    <h3 id="cr">How to request a new SSL certificate with openssl3 cmp client</h3>
+    <p>
+       To request an SSL certificate with the default extensions, subject = &quot;/CN=test.example.internal&quot;, &quot;newkey = test.example.internal.key&quot;
+       and &quot;certout = test.example.internal.crt&quot; set in the config file, just generate the RSA key and run &quot;openssl cmp&quot; like this 
+       (cr is the default command)
+    </p>
+    <pre>
+openssl genrsa -out test.example.internal.key 2048
+openssl cmp -config openssl.conf
+    </pre>
+    <p>
+       One may wish to use command line options (or at least some of them) instead of completely relying on what is in the config file.
+       For example, unique things like subject, key file and output file may be given as arguments:
+    </p>
+    <pre>
+openssl genrsa -out test2.example.internal.key 2048
+openssl cmp -config openssl.conf -subject &quot;/CN=test2.example.internal&quot; -newkey test2.example.internal.key -certout test2.example.internal.crt
+    </pre>
+
+    <h3 id="kur">How to update an SSL certificate with openssl3 cmp client</h3>
+    <p>
+       Key update operation (KUR) is essentially equivalent to a new certificate request (CR) except that one may or may not need
+       to generate a new RSA key. So the first command may be optional.
+    </p>
+    <pre>
+openssl genrsa -out test.example.internal.key 2048
+openssl cmp -config openssl.conf -section cmp,kur
+    </pre>
+    <p>
+        Or using command line arguments (again generating new RSA key and using &quot;-newkey&quot; is optional):
+    </p>
+    <pre>
+openssl genrsa -out test2.example.internal 2048
+openssl cmp -config openssl.conf -section cmp,kur -oldcert test2.example.internal.crt -newkey test2.example.internal.key -certout test2.example.internal.crt
+    </pre>
+
+    <h3 id="rr">How to revoke an SSL certificate with openssl3 cmp client</h3>
+    <p>
+        Using config file:
+    </p>
+    <pre>
+openssl cmp -config openssl.conf -section cmp,rr
+    </pre>
+    <p>
+        Using a combination of a config file and a command line arguments:
+    </p>
+    <pre>
+openssl cmp -config openssl.conf -section cmp,rr -oldcert test2.example.internal.crt
+    </pre>
+
+    <h3 id="sans">How to request a new SSL certificate with a subject alternative name (SAN) extension</h3>
+    <p>
+       To add more names into Subject Alternative Names (SAN) extension (common name from the certificate subject is added by default),
+       one may use -sans option. Common name from the certificate subject would need to be explicitly added to the list in this case.
+    </p>
+    <p>
+       Supported SANs are DNS and IP. 
+    </p>
+    <p>
+       DNS names must end with suffixes listed in <a href="domains.txt">domains.txt</a> or 
+       be an unqualified name, i.e. without any dots.
+    </p>
+    <p>
+       IP addresses must be in this range 10.x.x.x.
+    </p>
+    <pre>
+openssl genrsa -out test.example.internal.key 2048
+openssl cmp -config openssl.conf -sans test.example.internal,test2.example.internal
+    </pre>
+    <p>
+        Using a combination of a config file and a command line arguments:
+    </p>
+    <pre>
+openssl genrsa -out test.example.internal.key 2048
+openssl cmp -config openssl.conf -subject &quot;/CN=test.example.internal&quot; -newkey test.example.internal.key -certout test.example.internal.crt -sans test.example.internal,test2.example.internal
+    </pre>
+
+    <h3 id="ext">How to request a new SSL certificate with extensions</h3>
+    <p>
+       To add custom extensions or to modify the default ones (not all client extensions are honored though), use v3_ext section
+       in a config file and &quot;-reqexts&quot; option in the command line. Note that &quot;-sans&quot; option cannot be used in this case.
+    </p>
+    <pre>
+openssl genrsa -out test.example.internal.key 2048
+openssl cmp -config openssl.conf -reqexts v3_ext
+    </pre>
+    <p>
+        Using a combination of a config file and a command line arguments:
+    </p>
+    <pre>
+openssl genrsa -out test.example.internal.key 2048
+openssl cmp -config openssl.conf -subject &quot;/CN=test.example.internal&quot; -newkey test.example.internal.key -certout test.example.internal.crt -reqexts v3_ext
+    </pre>
+
+    <p>
+       Default client extensions are: 
+    </p>
+    <ul>
+       <li>X509v3 Subject Key Identifier (hash of the certificate public key)</li>
+       <li>X509v3 Authority Key Identifier (keyId of the Signing CA G2 public key)</li> 
+       <li>X509v3 Key Usage (digitalSignature and keyEncipherment)</li>
+       <li>X509v3 Basic Constraints (CA:false)</li>
+       <li>X509v3 Extended Key Usage (serverAuth and clientAuth)</li>
+       <li>X509v3 Subject Alternative Name (CN from the subject)</li>
+       <li>X509v3 CRL Distribution Points (URI pointing to the CRL)</li>
+       <li>Authority Information Access (caIssuers:URI pointing to the Signing CA G2 certificate and OCSP pointing to http://pki.example.com/ocsp/)</li>
+    </ul>
+    <p>
+       Forbidden client extensions are:
+    </p>
+    <ul>
+       <li>X509v3 Subject Key Identifier</li>
+       <li>X509v3 Authority Key Identifier</li> 
+       <li>X509v3 Basic Constraints</li>
+       <li>X509v3 CRL Distribution Points</li>
+       <li>Authority Information Access</li>
+    </ul>
+    <p>
+       Another words, these extensions will be ignored if requested by a client. Therefore, a client may ask for: 
+    </p>
+    <ul>
+       <li>X509v3 Key Usage (except cRLSign and keyCertSign)
+       <ul>
+           <li>digitalSignature</li> 
+           <li>nonRepudiation</li>
+           <li>keyEncipherment</li> 
+           <li>dataEncipherment</li> 
+           <li>keyAgreement</li> 
+           <li>encipherOnly</li>
+           <li>decipherOnly</li>
+       </ul></li>
+       <li>X509v3 Extended Key Usage (except OCSPSigning)
+       <ul>
+          <li>serverAuth</li>
+          <li>clientAuth</li> 
+          <li>codeSigning</li> 
+          <li>emailProtection</li>
+          <li>timeStamping</li>
+       </ul></li>
+       <li>X509v3 Subject Alternative Names (DNS names ending in <a href="domains.txt">domains.txt</a> and IPs from 10.x.x.x)</li>
+    </ul>
+    <p>
+       One more note about Key Usage and Extended Key Usage extensions - they must be consistent! 
+       See <a href="https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.12">https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.12</a> for more info.
+    </p>
+
+    <h3 id="csr">How to request a new SSL certificate using a PKCS #10 certificate request (CSR)</h3>
+    <p>
+       Openssl cmp client comes with p10cr command, which is considered legacy and its usage is discouraged.
+       You may still submit your PKCS #10 CSR file with cmp client using &quot;-csr&quot;
+       option with other commands like cr, kur or rr. The cmp client will convert the p10cr request to the supported cr request. You may need to set subject, san_nodefault and newkey options in openssl.conf file for the default cr command to #.
+    </p>
+    <pre>
+openssl cmp -config openssl.conf -csr test.example.internal.csr
+    </pre>
+    <p>
+        Using a combination of a config file and a command line arguments:
+    </p>
+    <pre>
+openssl cmp -config openssl.conf -cmd p10cr -csr test.example.internal.csr -certout test.example.internal.crt
+    </pre>
+
+
+    <h3 id="k8s">Simple bash script to autorenew certificates in k8s using CMP</h3>
+    <p>
+      Here is an example of how to renew certificates in kubernetes, which are usually stored in tls secrets.
+    </p>
+    <p>
+      All is needed to succesfully run this script in cronjob once in two years are openssl.conf file (see example above),
+      root_ca.pem, signing_ca.pem, user&#39;s SSL client certificate and correspoding private key for
+      authentication with CMP server.
+    </p>
+   <pre>
+#!/usr/bin/bash
+LOG_FILE="renew_certs.log"
+EXPIRE_SEC="604800"
+TLS_SECRETS="test-example-internal test2-example-internal"
+for TLS_SECRET in ${TLS_SECRETS}; do
+  SUBJECT=`kubectl get secret ${TLS_SECRET} -o yaml|grep "  tls.crt"|cut -d":" -f2|cut -d" " -f2|base64 -d|openssl x509 -subject -noout|awk 'BEGIN {FS = "CN = |$"} {print $2}'|awk 'BEGIN {FS = ","} {print $1}'`
+  echo "checking if certificate for ${SUBJECT} will expire in ${EXPIRE_SEC} seconds..." >> ${LOG_FILE} 2>&1
+  kubectl get secret ${TLS_SECRET} -o yaml|grep "  tls.crt"|cut -d":" -f2|cut -d" " -f2|base64 -d|openssl x509 -checkend ${EXPIRE_SEC} >> ${LOG_FILE} 2>&1
+  if [[ "$?" == "1" ]]; then
+    kubectl get secret ${TLS_SECRET} -o yaml|grep "  tls.crt"|cut -d":" -f2|cut -d" " -f2|base64 -d|openssl x509 -out ${SUBJECT}.pem >> ${LOG_FILE} 2>&1
+    echo "renewing the cert for subject ${SUBJECT}..." >> ${LOG_FILE} 2>&1
+    echo "openssl genrsa -out ${SUBJECT}.key 2048" >> ${LOG_FILE} 2>&1
+    openssl genrsa -out ${SUBJECT}.key 2048 >> ${LOG_FILE} 2>&1
+    echo "openssl cmp -config openssl.conf -section cmp,kur -oldcert ${SUBJECT}.pem -newkey ${SUBJECT}.key -certout ${SUBJECT}.pem" >> ${LOG_FILE} 2>&1
+    openssl cmp -config openssl.conf -section cmp,kur -oldcert ${SUBJECT}.pem -newkey ${SUBJECT}.key -certout ${SUBJECT}.pem >> ${LOG_FILE} 2>&1
+    echo "kubectl delete secret ${TLS_SECRET}" >> ${LOG_FILE} 2>&1
+    kubectl delete secret ${TLS_SECRET} >> ${LOG_FILE} 2>&1
+    echo "kubectl create secret tsl ${TLS_SECRET} --key ${SUBJECT}.key --cert ${SUBJECT}.pem" >> ${LOG_FILE} 2>&1
+    kubectl create secret tsl ${TLS_SECRET} --key ${SUBJECT}.key --cert ${SUBJECT}.pem >> ${LOG_FILE} 2>&1
+    if [[ "${SUBJECT}" == "test.example.internal" ]]; then
+      echo "kubectl rollout restart deployment httpd" >> ${LOG_FILE} 2>&1
+      kubectl rollout restart deployment httpd >> ${LOG_FILE} 2>&1
+    fi
+    if [[ "${SUBJECT}" == "test2.example.internal" ]]; then
+      echo "kubectl rollout restart deployment nginx" >> ${LOG_FILE} 2>&1
+      kubectl rollout restart deployment nginx >> ${LOG_FILE} 2>&1
+    fi
+  fi
+done
+   </pre>
+
+
+    <h3 id="get">How to get an SSL certificate from the PKI certificate database</h3>
+    <p>
+      Certificate Store Access via HTTP documented in rfc4387 is supported. Just send an appropriate GET request to well-known URI.
+    </p>
+    <ul>
+      <li>For certificates: https://pki.example.com/certificates/search.cgi?attribute=value</li>
+      <li>For CRLs: https://pki.example.com/crls/search.cgi?attribute=value</li>
+    </ul>
+    <p>
+      All x.509 attribute types listed in rfc4387 are supported: certHash, uri, iHash, iAndSHash, name, cn, sHash, sKIDHash.
+    </p>
+    <p>
+      For example, to get someone SMIME certificate to exchange encrypted internal emails, use this URI: https://pki.example.com/certificates/search.cgi?uri=email_address. Note that this person needs to request SMIME certificate first using https://pki.example.com/cert_request.html selecting SMIME role and authenticating to Avifors AD.
+    </p>
+
+
+    <p>
+       A non-standard way to get a certificate if you lost your copy is to download it again from this link
+       <a href="get_cert.php?serial=123456789">get_cert.php?serial=123456789</a>. Just replace the serial number in decimal form (not hex!). You must be the owner of certificate, meaning that you need to use your client SSL certificate for authentication.
+    </p>
+    <p>
+       If you lost your client certificate, you may download it again from <a href="cert_request.html">cert_request.html</a>.
+       There is no need to provide a public key in this case. Just prove your identity with your Avifors AD username and password.
+    </p>
+
+    <h3 id="verify">How to verify the issued X509 certificate</h3>
+    <p>
+       To verify the issued SSL certificate, one may use &quot;openssl verify&quot; or &quot;openssl ocsp&quot; command.
+    </p>
+    <pre>
+openssl verify -crl_check_all -crl_download -x509_strict -untrusted signing_ca.pem -trusted root_ca.pem test.example.internal.crt
+openssl ocsp -url http://pki.example.com/ocsp/ -issuer signing_ca.pem -cert test.example.internal.crt
+    </pre>
+
+    <h3 id="list">List issued, revoked or expired certificates</h3>
+    <p>
+      This again is a non-standard way to list certificates inherited from former non-standard PKI API.
+    </p>
+    <p>
+       To list certificates, you need to authenticate with your client SSL certificate that you 
+       obtained via <a href="cert_request.html">cert_request.html</a>. 
+       It is the same certificate that you use with &quot;-cert&quot; option in openssl3 cmp commands or &quot;cert&quot; 
+       option in openssl.conf file. Check your web browser or curl documentation on how to do this.
+    </p>
+    <p>
+        list.php (or <a href="list.html">list.html</a>) displays a list of issued, revoked or expired certificates as well as
+        certificates that are to expire in a number of given days for a given owner contained in the SSL client certificate.
+    </p>
+    <p>
+        &quot;type=&lt;issued|revoke|expired|all&gt;&quot; will show issued, revoked, expired or all certificates.
+    </p>
+    <p>
+        &quot;expire=&lt;DAYS&gt;&quot; will list certificates that expire within the number of DAYS.
+    </p>
+    <ul>
+        <li>URL: <a href="list.php?type=&lt;issued|revoked|expired|all&gt;&expire=&lt;DAYS&gt;">list.php?type=&lt;issued|revoked|expired|all&gt;&expire=&lt;DAYS&gt;</a> </li>
+        <li>Methods: GET, <a href="list.html">POST</a></li>
+        <li>
+            Arguments:
+            <ul>
+                <li>expire=&lt;DAYS&gt; - optional, no default</li>
+                <li>type=&lt;issued|revoked|expired|all&gt; - optional, defaults to issued</li>
+            </ul>
+        </li>
+        <li>
+            Return: a json object
+            <pre>
+    {
+        &quot;status&quot;:&quot;404&quot;,
+        &quot;detail&quot;:&quot;No certificates have been found&quot;
+    }
+            </pre>
+            or an array of json objects
+            <pre>
+[
+      {
+            &quot;status&quot;:200,
+            &quot;detail&quot;:&quot;Listing issued certificates&quot;
+      },
+	[
+		{
+			&quot;Common Name&quot;:&quot;test.example.internal&quot;,
+			&quot;Status&quot;:&quot;valid&quot;,
+			&quot;notBefore&quot;:&quot;20220622032121Z&quot;,
+			&quot;notAfter&quot;:&quot;20240621032121Z&quot;,
+			&quot;Serial Number&quot;:&quot;2801613170610218360484692827710463436975746101&quot;
+		},
+	]
+]
+        </pre>
+        </li>
+    </ul>
+
+    <h3 id="email">Receive email notifications about expiring certificates</h3>
+    <p>
+        To receive email notifications on a regular basis, just send a GET or a POST request to notify.php (or <a href="notify.html">notify.html</a>) on your schedule.
+        Again, you would need to authenticate with your client SSL certificate.
+    </p>
+    <ul>
+        <li>URL: <a href="notify.php?email=EMAIL&expire=DAYS">notify.php?email=&lt;EMAIL&gt;&amp;expire=&lt;DAYS&gt;</a> </li>
+        <li>Methods: GET, <a href="notify.html">POST</a></li>
+        <li>
+            Arguments:
+            <ul>
+                <li>email=&lt;EMAIL&gt; - required</li>
+                <li>expire=&lt;DAYS&gt; - optional (defaults to 30)</li>
+            </ul>
+        </li>
+    </ul>
+
+    <p>The result will be returned via email:</p>
+    <pre>
+    Hello &lt;username&gt;,
+    please be aware that the following certificates
+    will expire in less than &lt;DAYS&gt;:
+    sn: &lt;serial number&gt;, subject: &lt;subject&gt;, expire: &lt;expiration date in format YYYYMMDDhhmmssZ&gt;
+    </pre>
+    <p>The json object will have:</p>
+    <pre>
+    {
+        &quot;status&quot;:&quot;200&quot;,
+        &quot;detail&quot;:&quot;Email has been sent to &lt;EMAIL&gt;&quot;,
+    }
+    </pre>
+    <p>or</p>
+    <pre>
+    {
+        &quot;status&quot;:&quot;404&quot;,
+        &quot;detail&quot;:&quot;No certificates will expire in &lt;DAYS&gt; days&quot;,
+    }
+    </pre>
+
+    <h3 id="domains">List allowed domains or check if a certain domain (CN) is allowed in CMP or EST</h3>
+    <p>
+        domains.php (or <a href="domains.html">domains.html</a>) will return a list of <a href="domains.txt">allowed domain names</a> (CNs). If cn is provided, it will check whether the given domain is allowed.
+    </p>
+    <ul>
+        <li>URL: <a href="domains.php?cn=CN">domains.php?cn=&lt;CN&gt;</a> </li>
+        <li>Methods: GET, <a href="domains.html">POST</a></li>
+        <li>
+            Arguments:
+            <ul>
+                <li>cn=&lt;CN&gt; - optional</li>
+            </ul>
+        </li>
+        <li>
+            Return: a json object
+            <pre>
+    {
+        &quot;status&quot;:&quot;200&quot;,
+        &quot;detail&quot;:&quot;CN &lt;CN&gt; is valid&quot;
+    }
+            </pre>
+            or an array of json objects
+            <pre>
+    [
+        {
+            &quot;status&quot;:&quot;200&quot;,
+            &quot;detail&quot;:&quot;Allowed domains&quot;
+        },
+        [
+            {
+                &quot;*.*.internal&quot;,
+            },
+            {
+                &quot;*.corp-apps.com&quot;,
+            }
+        ]
+    ]
+            </pre>
+        </li>
+    </ul>
+
+</body>
+</html>

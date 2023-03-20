@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Certificates Listing Form</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+</head>
+
+<body style="font-family:courier new; background-color:#005580; color:white">
+    <form method="post" action="/list.php" oninput="set_value()">
+        <fieldset>
+            <legend>Certificates Listing Form</legend>
+            <input type="radio" id="issued" name="type" value="issued" checked>
+            <label for="issued">Issued</label>
+            <input type="radio" id="revoked" name="type" value="revoked">
+            <label for="revoked">Revoked</label>
+            <input type="radio" id="expired" name="type" value="expired">
+            <label for="expired">Expired</label>
+            <input type="radio" id="all" name="type" value="all">
+            <label for="all">All</label><br>
+            <label for="expire">Expire within days (optional):</label><br>
+            <input type="text" size="3" maxlength="3" id="expire" name="expire" pattern="[1-9]+[0-9]?[0-9]?"><br>
+            <input type="submit" name="submit" value="Submit">
+        </fieldset>
+    </form>
+</body>
+</html>

@@ -1,0 +1,10 @@
+===GUI===
+certreq -enroll -policyserver * -user GenericUser
+certreq -enroll -policyserver * -user Email
+certreq -enroll -policyserver * -machine GenericComputer
+
+certreq -enroll -policyserver https://pki.example.com/msxcep/ -user GenericUser
+certreq -enroll -policyserver https://pki.example.com/msxcep/ -user Email
+certreq -enroll -policyserver https://pki.example.com/msxcep/ -machine GenericComputer
+
+===CMD===

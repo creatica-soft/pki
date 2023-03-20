@@ -1,0 +1,419 @@
+certreq -v -?
+Usage:
+  CertReq -?
+  CertReq [-v] -?
+  CertReq [-Command] -?
+
+  CertReq [-Submit] [Options] [RequestFileIn [CertFileOut [CertChainFileOut [FullResponseFileOut]]]]
+    Submit a request to a Certification Authority.
+
+  Options:
+    -attrib AttributeString
+    -binary
+    -PolicyServer PolicyServer
+    -config ConfigString
+    -Anonymous
+    -Kerberos
+    -ClientCertificate ClientCertId
+    -UserName UserName
+    -p Password
+    -crl
+    -rpc
+    -AdminForceMachine
+    -RenewOnBehalfOf
+    -NoChallenge
+
+  CertReq -Retrieve [Options] RequestId [CertFileOut [CertChainFileOut [FullResponseFileOut]]]
+    Retrieve a response to a previous request from a Certification Authority.
+
+  Options:
+    -binary
+    -PolicyServer PolicyServer
+    -config ConfigString
+    -Anonymous
+    -Kerberos
+    -ClientCertificate ClientCertId
+    -UserName UserName
+    -p Password
+    -crl
+    -rpc
+    -AdminForceMachine
+
+  CertReq -New [Options] [PolicyFileIn [RequestFileOut]]
+    Create a new request as directed by PolicyFileIn
+
+  Options:
+    -attrib AttributeString
+    -binary
+    -cert CertId
+    -PolicyServer PolicyServer
+    -config ConfigString
+    -Anonymous
+    -Kerberos
+    -ClientCertificate ClientCertId
+    -UserName UserName
+    -p Password
+    -pin Pin
+    -user
+    -machine
+    -xchg ExchangeCertFile
+
+  CertReq -Accept [Options] [CertChainFileIn | FullResponseFileIn | CertFileIn]
+    Accept and install a response to a previous new request.
+
+  Options:
+    -user
+    -machine
+    -pin Pin
+
+  CertReq -Policy [Options] [RequestFileIn [PolicyFileIn [RequestFileOut [PKCS10FileOut]]]]
+    Construct a cross certification or qualified subordination request
+    from an existing CA certificate or from an existing request.
+
+  Options:
+    -attrib AttributeString
+    -binary
+    -cert CertId
+    -PolicyServer PolicyServer
+    -Anonymous
+    -Kerberos
+    -ClientCertificate ClientCertId
+    -UserName UserName
+    -p Password
+    -pin Pin
+    -noEKU
+    -AlternateSignatureAlgorithm
+    -HashAlgorithm HashAlgorithm
+
+  CertReq -Sign [Options] [RequestFileIn [RequestFileOut]]
+    Sign a certificate request with an enrollment agent or qualified
+    subordination signing certificate.
+
+  Options:
+    -binary
+    -cert CertId
+    -PolicyServer PolicyServer
+    -Anonymous
+    -Kerberos
+    -ClientCertificate ClientCertId
+    -UserName UserName
+    -p Password
+    -pin Pin
+    -crl
+    -noEKU
+    -HashAlgorithm HashAlgorithm
+
+  CertReq -Enroll [Options] TemplateName
+  CertReq -Enroll -cert CertId [Options] Renew [ReuseKeys]
+    Enroll for or renew a certificate.
+
+  Options:
+    -PolicyServer PolicyServer
+    -user
+    -machine
+    -pin Pin
+
+  CertReq -EnrollAIK [Options] [KeyContainerName]
+    Enroll for AIK certificate.
+
+  Options:
+    -config
+
+  CertReq -EnrollCredGuardCert [Options] TemplateName [ExtensionInfFile]
+    Enroll for machine account Credential Guard certificate.
+
+  Options:
+    -config
+
+  CertReq -EnrollLogon [Options]
+    Enroll for Hello for Business Logon certificate via ADFS.
+
+  Options:
+    -q
+
+  CertReq -Post [Options]
+    POST an http request.
+
+  Options:
+    -attrib AttributeString
+    -config URL
+
+Description:
+  -any                    - Force ICertRequest::Submit to determine encoding
+                            type
+  -attrib AttributeString - Request attribute string
+  -binary                 - Output files in binary format instead of Base64-
+                            encoded
+  -cert CertId            - Specify signing certificate by common name,
+                            serial number, or by sha-1 key or certificate hash
+  -PolicyServer PolicyServer - Policy Server URL or Id
+                            or use an asterisk (*) to select via U/I
+  -config ConfigString    - Server\CertificationAuthority
+                            or for an https: connection: Enrollment Server URL
+                            or for a SCEP server: Server Name or URL
+                            or use a single minus sign (-) for local machine CA
+  -crl                    - Include CRLs in CertChainFileOut or
+                            RequestFileOut
+  -rpc                    - Use RPC instead of a DCOM server connection
+  -AdminForceMachine      - Use the Key Service to submit the request from
+                            Local System context
+  -user                   - Use the Current User context for accepting
+                            a response
+  -machine                - Use the Local Machine context for accepting
+                            a response
+  -f                      - Force existing files to be overwritten
+  -q                      - Suppress all interactive dialogs
+  -v                      - Display full response properties
+  -?                      - Display this usage message
+  -noEKU                  - Do not filter signing certificate selection by
+                            Enhanced Key Usage
+  -xchg ExchangeCertFile  - File containing the CA encryption certificate
+                            to be used to archive the private key
+  -AlternateSignatureAlgorithm - Use alternate signature algorithm
+  -HashAlgorithm HashAlgorithm - Use the specified hash algorithm
+  -RenewOnBehalfOf        - Submit a renewal request on behalf of the subject
+                            identified in the signing certificate
+  -Unicode                - Write redirected output in Unicode
+  -UnicodeText            - Write output file in Unicode
+  -NoChallenge            - Don't process key attestation challenge
+
+  RequestFileIn           - Base64-encoded or binary input file name:
+                            PKCS10 certificate request,
+                            CMS certificate request,
+                            PKCS7 certificate renewal request,
+                            X.509 certificate to be cross-certified, or
+                            KeyGen tag format certificate request
+  RequestFileOut          - Base64-encoded output file name
+  PKCS10FileOut           - Base64-encoded PKCS10 output file name
+  CertFileOut             - Base64-encoded X-509 file name
+  CertChainFileOut        - Base64-encoded PKCS7 file name
+  FullResponseFileOut     - Base64-encoded Full Response file name
+  ConfigString            - Backslash separated server name and Certification
+                            Authority name: MachineDnsName\CAName
+  AttributeString         - Colon separated Name and Value string pairs
+                            Each pair is separated by a backslash and "n"
+                            Example: "Name1: Value1\n Name2: Value2"
+  PolicyFileIn            - INF file containing a textual representation
+                            of extensions used to qualify a request
+
+[NewRequest]
+    Subject = "CN=..,OU=...,DC=..."
+    Exportable = true
+    ExportableEncrypted = true
+    HashAlgorithm = sha1
+    KeyAlgorithm = RSA
+    KeyContainer = "..."
+    KeyLength = 1024
+    KeySpec = AT_KEYEXCHANGE
+    KeyUsage = "CERT_DIGITAL_SIGNATURE_KEY_USAGE | CERT_KEY_ENCIPHERMENT_KEY_USAGE"
+    KeyUsageProperty = "NCRYPT_ALLOW_DECRYPT_FLAG | NCRYPT_ALLOW_SIGNING_FLAG"
+    MachineKeySet = true
+    PrivateKeyArchive = true
+    EncryptionAlgorithm = 3des
+    EncryptionLength = 128
+    ProviderName = "Microsoft Enhanced Cryptographic Provider v1.0"
+    ProviderType = 1
+    RenewalCert = CertId
+    RequesterName = DOMAIN\User
+    RequestType = PKCS10 | PKCS7 | CMC | Cert | SCEP
+    SecurityDescriptor = "D:P(A;;GA;;;SY)(A;;GA;;;BA)"
+    AlternateSignatureAlgorithm = false
+    Silent = true
+    SMIME = true
+    UseExistingKeySet = true
+    KeyProtection = NCRYPT_UI_FORCE_HIGH_PROTECTION_FLAG
+    SuppressDefaults = true
+    FriendlyName = "..."
+
+[Extensions]
+    2.5.29.17 = "{text}"        ; Subject Alternative Name/2.5.29.18: Issuer Alternative Name
+    _continue_ = "UPN=User@Domain.com&"
+    _continue_ = "EMail=User@Domain.com&"
+    _continue_ = "DNS=Machine.Domain.com&"
+    _continue_ = "DirectoryName=CN=Name,DC=Domain,DC=com&"
+    _continue_ = "URL=http://Machine.Domain.com/default.html&"
+    _continue_ = "IPAddress=10.0.0.1&"
+    _continue_ = "RegisteredId=1.2.3...4.5&"
+    _continue_ = "1.2.3...4.6.1={utf8}String&"
+    _continue_ = "1.2.3...4.6.2={octet}AAECAwQFBgc=&"
+    _continue_ = "1.2.3...4.6.2={octet}{hex}00 01 02 03 04 05 06 07&"
+    _continue_ = "1.2.3...4.6.3={asn}BAgAAQIDBAUGBw==&"
+    _continue_ = "1.2.3...4.6.3={hex}04 08 00 01 02 03 04 05 06 07"
+
+    2.5.29.37 = "{text}"        ; Enhanced Key Usage
+    _continue_ = "1.3.6.1.5.5.7.3.2,"
+    _continue_ = "1.3.6.1.5.5.7.3.1"
+
+    2.5.29.19 = "{text}ca=0&pathlength=3"       ; Basic Constraints
+    Critical = 2.5.29.19
+
+    2.5.29.31 = "{text}"        ; CRL Distribution Points/2.5.29.46: Freshest CRL
+    _continue_ = "DistPointName=true&"
+        _continue_ = "EMail=User@Domain.com&"
+        _continue_ = "DNS=test.domain.com&"
+        _continue_ = "DirectoryName=CN=User,DC=domain,DC=com&"
+        _continue_ = "URL=http://crls.domain.com/test1.crl&"
+        _continue_ = "URL=http://crls.domain.com/test2.crl&"
+        _continue_ = "URL=http://crls.domain.com/test3.crl&"
+        _continue_ = "RegisteredId=1.2.3.4.5.8&"
+        _continue_ = "1.2.3.4.5={utf8}User@Domain.com&"
+        _continue_ = "UPN=User@Domain.com&"
+        _continue_ = "IPAddress=10.0.0.2&"
+        _continue_ = "ReasonFlags=0x40&"
+    _continue_ = "CRLIssuer=true&"
+        _continue_ = "DirectoryName=CN=User,DC=domain,DC=com&"
+    _continue_ = "DistPointName=true&"
+        _continue_ = "EMail=User@Domain.com&"
+        _continue_ = "DNS=test.domain.com&"
+        _continue_ = "DirectoryName=CN=User,DC=domain,DC=com&"
+        _continue_ = "URL=http://crls.domain.com/test2.crl&"
+        _continue_ = "RegisteredId=1.2.3.4.5.8&"
+        _continue_ = "1.2.3.4.5={utf8}User@Domain.com&"
+        _continue_ = "UPN=User@Domain.com&"
+        _continue_ = "IPAddress=10.0.0.2&"
+        _continue_ = "ReasonFlags=0x40&"
+    _continue_ = "CRLIssuer=true&"
+        _continue_ = "DirectoryName=CN=User,DC=domain,DC=com&"
+
+    1.3.6.1.5.5.7.1.1 = "{text}"        ; Authority Information Access/1.3.6.1.5.5.7.1.11: Subject Information Access
+    _continue_ = "AccessMethod=CAIssuers&"
+        _continue_ = "URL=http://certs1.domain.com/testca.crt&"
+        _continue_ = "URL=http://certs2.domain.com/testca.crt&"
+    _continue_ = "AccessMethod=OCSP&"
+        _continue_ = "URL=http://oscp.domain.com/oscp.html&"
+    _continue_ = "AccessMethod=CAIssuers&"
+        _continue_ = "EMail=User@domain.com&"
+        _continue_ = "DNS=test.domain.com&"
+        _continue_ = "DirectoryName=CN=User,DC=domain,DC=com&"
+        _continue_ = "URL=http://certs.domain.com/cacert.cer&"
+        _continue_ = "RegisteredId=1.2.3.4.5.8&"
+        _continue_ = "1.2.3.4.5={utf8}test.domain.com&"
+        _continue_ = "UPN=User@domain.com&"
+        _continue_ = "IPAddress=10.0.0.2&"
+
+    2.5.29.30 = "{text}"        ; Name Constraints
+    _continue_ = "SubTree=Include&"
+        _continue_ = "EMail=User@domain.com&"
+        _continue_ = "DNS=User.domain.com&"
+        _continue_ = "DirectoryName=CN=User,DC=domain,DC=com&"
+        _continue_ = "URL=http://domain.com/page.html&"
+        _continue_ = "RegisteredId=1.2.3.4.5.8&"
+        _continue_ = "1.2.3.4.5={utf8}User@domain.com&"
+        _continue_ = "UPN=User@domain.com&"
+        _continue_ = "IPAddress=10.0.0.2,255.255.255.255&"
+    _continue_ = "SubTree=Exclude&"
+        _continue_ = "EMail=User@bad.com&"
+        _continue_ = "DNS=User.bad.com&"
+        _continue_ = "DirectoryName=CN=User,DC=bad,DC=com&"
+        _continue_ = "URL=http://bad.com/page.html&"
+        _continue_ = "RegisteredId=1.2.3.4.5.9&"
+        _continue_ = "1.2.3.4.5={utf8}User@bad.com&"
+        _continue_ = "UPN=User@bad.com&"
+        _continue_ = "IPAddress=11.0.0.2,255.255.255.255&"
+
+    2.5.29.32 = "{text}"        ; Certificate Policies/1.3.6.1.4.1.311.21.10: Application Policies
+    _continue_ = "OID=1.2.3.4&"
+        _continue_ = "URL=http://contoso.com/com.html&"
+        _continue_ = "Notice=text notice&"
+        _continue_ = "Flags=0xc0&"
+    _continue_ = "OID=1.2.3.5&"
+        _continue_ = "Flags=0x80&"
+
+    2.5.29.33 = "{text}"        ; Policy Mappings/1.3.6.1.4.1.311.21.11: Application Policy Mappings
+    _continue_ = "1.2.3.4=1.2.89.12&"
+    _continue_ = "1.2.3.5=1.3.89.13&"
+    _continue_ = "1.2.3.6=1.3.89.14&"
+
+    2.5.29.36 = "{text}"        ; Policy Constraints/1.3.6.1.4.1.311.21.12: Application Policy Constraints
+    _continue_ = "RequireExplicitPolicy=3&"
+    _continue_ = "InhibitPolicyMapping=5&"
+
+    2.5.29.9 = "{text}" ; Subject Directory Attributes
+    _continue_ = "Family=1.2=3&"
+    _continue_ = "Level=2&"
+    _continue_ = "Revision=116&"
+    _continue_ = "Algorithm=RSAES_OAEP&"
+    _continue_ = "AlgorithmParameters={hex}xx xx ...&"
+    _continue_ = "Algorithm=sha1&"
+    _continue_ = "FieldUpgradable=True&"
+    _continue_ = "EKGenerationType=Injected&"
+    _continue_ = "EKGenerationLocation=TPMManufacturer&"
+    _continue_ = "EKCertificateGenerationLocation=TPMManufacturer&"
+    _continue_ = "CCMVersion=3.0&"
+    _continue_ = "EvaluationAssuranceLevel=4&"
+    _continue_ = "EvaluationStatus=designedToMeet&"
+    _continue_ = "plus=True&"
+    _continue_ = "iso9000Certified=True&"
+
+
+KeySpec =
+    AT_NONE -- 0
+    AT_SIGNATURE -- 2
+    AT_KEYEXCHANGE -- 1
+
+RequestType =
+    PKCS10 -- 1
+    PKCS7 -- 2
+    CMC -- 3
+    Cert -- 4
+    SCEP -- fd00 (64768)
+
+KeyUsage =
+    CERT_DIGITAL_SIGNATURE_KEY_USAGE -- 80 (128)
+    CERT_NON_REPUDIATION_KEY_USAGE -- 40 (64)
+    CERT_KEY_ENCIPHERMENT_KEY_USAGE -- 20 (32)
+    CERT_DATA_ENCIPHERMENT_KEY_USAGE -- 10 (16)
+    CERT_KEY_AGREEMENT_KEY_USAGE -- 8
+    CERT_KEY_CERT_SIGN_KEY_USAGE -- 4
+    CERT_OFFLINE_CRL_SIGN_KEY_USAGE -- 2
+    CERT_CRL_SIGN_KEY_USAGE -- 2
+    CERT_ENCIPHER_ONLY_KEY_USAGE -- 1
+    CERT_DECIPHER_ONLY_KEY_USAGE -- 8000 (32768)
+
+KeyUsageProperty =
+    NCRYPT_ALLOW_DECRYPT_FLAG -- 1
+    NCRYPT_ALLOW_SIGNING_FLAG -- 2
+    NCRYPT_ALLOW_KEY_AGREEMENT_FLAG -- 4
+    NCRYPT_ALLOW_ALL_USAGES -- ffffff (16777215)
+
+KeyProtection =
+    NCRYPT_UI_NO_PROTECTION_FLAG -- 0
+    NCRYPT_UI_PROTECT_KEY_FLAG -- 1
+    NCRYPT_UI_FORCE_HIGH_PROTECTION_FLAG -- 2
+
+SubjectNameFlags =
+    template
+    CT_FLAG_SUBJECT_REQUIRE_COMMON_NAME -- 40000000 (1073741824)
+    CT_FLAG_SUBJECT_REQUIRE_DIRECTORY_PATH -- 80000000 (2147483648)
+    CT_FLAG_SUBJECT_REQUIRE_DNS_AS_CN -- 10000000 (268435456)
+    CT_FLAG_SUBJECT_REQUIRE_EMAIL -- 20000000 (536870912)
+    CT_FLAG_OLD_CERT_SUPPLIES_SUBJECT_AND_ALT_NAME -- 8
+    CT_FLAG_SUBJECT_ALT_REQUIRE_DIRECTORY_GUID -- 1000000 (16777216)
+    CT_FLAG_SUBJECT_ALT_REQUIRE_DNS -- 8000000 (134217728)
+    CT_FLAG_SUBJECT_ALT_REQUIRE_DOMAIN_DNS -- 400000 (4194304)
+    CT_FLAG_SUBJECT_ALT_REQUIRE_EMAIL -- 4000000 (67108864)
+    CT_FLAG_SUBJECT_ALT_REQUIRE_SPN -- 800000 (8388608)
+    CT_FLAG_SUBJECT_ALT_REQUIRE_UPN -- 2000000 (33554432)
+
+X500NameFlags =
+    CERT_NAME_STR_NONE -- 0
+    CERT_OID_NAME_STR -- 2
+    CERT_X500_NAME_STR -- 3
+    CERT_NAME_STR_SEMICOLON_FLAG -- 40000000 (1073741824)
+    CERT_NAME_STR_NO_PLUS_FLAG -- 20000000 (536870912)
+    CERT_NAME_STR_NO_QUOTING_FLAG -- 10000000 (268435456)
+    CERT_NAME_STR_CRLF_FLAG -- 8000000 (134217728)
+    CERT_NAME_STR_COMMA_FLAG -- 4000000 (67108864)
+    CERT_NAME_STR_REVERSE_FLAG -- 2000000 (33554432)
+    CERT_NAME_STR_FORWARD_FLAG -- 1000000 (16777216)
+    CERT_NAME_STR_DISABLE_IE4_UTF8_FLAG -- 10000 (65536)
+    CERT_NAME_STR_ENABLE_T61_UNICODE_FLAG -- 20000 (131072)
+    CERT_NAME_STR_ENABLE_UTF8_UNICODE_FLAG -- 40000 (262144)
+    CERT_NAME_STR_FORCE_UTF8_DIR_STR_FLAG -- 80000 (524288)
+    CERT_NAME_STR_DISABLE_UTF8_DIR_STR_FLAG -- 100000 (1048576)
+    CERT_NAME_STR_ENABLE_PUNYCODE_FLAG -- 200000 (2097152)
+    CERT_NAME_STR_DS_ESCAPED -- 800000 (8388608)
+
+EccKeyParametersType =
+    CRYPT_OID_USE_CURVE_NAME_FOR_ENCODE_FLAG -- 20000000 (536870912)
+    CRYPT_OID_USE_CURVE_PARAMETERS_FOR_ENCODE_FLAG -- 10000000 (268435456)

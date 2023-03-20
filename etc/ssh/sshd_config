@@ -1,0 +1,6 @@
+PubkeyAcceptedAlgorithms ssh-rsa,rsa-sha2-512
+AuthorizedKeysFile      .ssh/authorized_keys
+AllowTcpForwarding no
+GatewayPorts no
+X11Forwarding no
+Subsystem       sftp    /usr/lib/ssh/sftp-server

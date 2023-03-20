@@ -1,0 +1,205 @@
+### Installation
+
+1. Create alpine VM instance (openstack or vmware) 1 cpu, 1GB of ram and disk should be more than enough
+1.1. Disable IPv6 with
+
+```
+vi /etc/sysctl.conf
+net.ipv6.conf.all.disable_ipv6 = 1
+net.ipv6.conf.default.disable_ipv6 = 1
+net.ipv6.conf.lo.disable_ipv6 = 1
+
+sysctl net.ipv6.conf.all.disable_ipv6=1
+sysctl net.ipv6.conf.default.disable_ipv6=1
+sysctl net.ipv6.conf.lo.disable_ipv6=1
+```
+
+1.2. Update /etc/hosts file with static IP matching server name; for example,
+
+```
+127.0.0.1      localhost.localdomain localhost
+10.165.64.95   pki-signing-ca.example.internal pki-signing-ca pki.example.com
+```
+
+1.3. Configure /etc/resolv.conf
+
+```
+search example.internal
+nameserver 10.1.1.1
+nameserver 10.1.1.2
+```
+
+2. Create alpine group and user with rsa key ssh access for management (same key is shared between LAT and TDR)
+
+```
+addgoup alpine
+adduser -G alpine -D alpine
+sed -i -e '/^alpine/s/!/*/' /etc/shadow
+```
+
+3. Install sudo and add alpine user into /etc/sudoers
+
+```
+apk add sudo
+
+vi /etc/sudoers
+alpine ALL=(ALL) NOPASSWD: ALL
+
+sudo -u alpine -i
+mkdir .ssh
+ssh-keygen
+cp .ssh/id_rsa.pub .ssh/authorized_keys
+```
+
+4. Disable ssh for root account and getty on ttyS0 in /etc/inittab (reboot is required)
+5. Configure chronyd with time servers such as ntp.example.internal and ntp.tdr.internal
+6. Install net-snmp and configure /etc/snmp/snmpd.conf for monitoring by Icinga. Beware of this bug https://gitlab.alpinelinux.org/alpine/aports/-/issues/12309.
+7. Enable community repo and install necessary packages
+
+```
+sudo vi /etc/apk/repositories
+http://dl-cdn.alpinelinux.org/alpine/v3.16/community
+
+sudo apk update
+sudo apk add php8 php8-openssl php8-fpm php8-curl php8-soap php8-xml uuidgen nginx git open-vm-tools logrotate php8-gmp coreutils nginx-mod-http-headers-more php8-ldap php8-sqlite3 php8-mbstring sqlite openssl3 net-snmp
+sudo rc-update add open-vm-tools
+sudo service open-vm-tools start
+```
+
+8. Clone this repo as alpine user
+
+```
+vi .ssh/config
+Host git.corp-apps.com
+ HostName git.corp-apps.com
+ IdentityFile ~/.ssh/id_rsa_git
+
+git clone ...
+```
+
+9. Copy config files from etc folder to /etc
+
+10. Create /var/www/pki.example.com folder
+
+11. Copy some files and folders from pki to /var/www/pki.example.com. 
+
+12. Add user "nobody" into mail group for php mail to work. 
+
+13. Ensure the correct permissions on privaate keys and certificates under /etc/ssl; 
+
+```
+ls -la /etc/ssl/private
+drwxr-xr-x 2 root root   4096 Jul  1 08:02 .
+drwxr-xr-x 6 root root   4096 Jul  1 10:19 ..
+-r--r----- 1 root nobody 3269 Jul  1 07:16 signing_ca.key
+-r--r----- 1 root nobody 1705 Jul  1 08:02 pki.example.com.key
+
+ ls -la /etc/ssl/*.der
+-rw-r--r-- 1 root root 1406 Jul  1 07:20 /etc/ssl/root_ca.der
+-rw-r--r-- 1 root root 1495 Jul  1 07:20 /etc/ssl/signing_ca.der
+-rw-r--r-- 1 root root 1328 Jul  1 10:19 /etc/ssl/pki.example.com.der
+
+ls -la /etc/ssl/*.pem
+lrwxrwxrwx 1 root root   25 Jul  1 06:53 /etc/ssl/cert.pem -> certs/ca-certificates.crt
+-rw-r--r-- 1 root root 1961 Jul  1 07:12 /etc/ssl/root_ca.pem
+-rw-r--r-- 1 root root 2083 Jul  1 07:13 /etc/ssl/signing_ca.pem
+-rw-r--r-- 1 root root 3937 Jul  5 10:31 /etc/ssl/pki.example.com.pem
+```
+
+13.1. Add CA's cert into the /etc/ssl/ca-certificates.crt file.
+
+14. Request and install SSL web server certificate for nginx with the subject CN=pki.example.com 
+
+15. Add nginx and php-fpm8 to default runlevel
+
+```
+sudo rc-update add nginx
+sudo rc-update add php-fpm8
+```
+
+17. Create /var/pki folder owned by nobody:alpine. It will have sqlite3 databases certs.db and acme.db
+
+```
+sudo mkdir /var/pki
+sudo chown nobody /var/pki
+sudo sqlite3 /var/pki/certs.db \
+  'create table certs(serial TEXT PRIMARY KEY ASC, status INTEGER, revocationReason INTEGER, revocationDate INTEGER, notBefore INTEGER, notAfter INTEGER, subject TEXT, owner TEXT, role TEXT, cert BLOB, cn TEXT, fingerprint TEXT, sHash TEXT, iAndSHash TEXT, sKIDHash TEXT);' \
+  'CREATE INDEX subj_idx on certs(subject); CREATE INDEX status_idx on certs(status); CREATE INDEX from_idx on certs(notBefore);' \
+  'CREATE INDEX to_idx on certs(notAfter); CREATE INDEX owner_idx on certs(owner); CREATE INDEX role_idx on certs(role);' \
+  'CREATE INDEX cn_idx on certs(cn); CREATE INDEX fingerprint_idx on certs(fingerprint); CREATE INDEX sHash_idx on certs(sHash);' \
+  'CREATE INDEX iAndSHash_idx on certs(iAndSHash); CREATE INDEX sKIDHash_idx on certs(sKIDHash);'
+
+status: 0 - valid, 1 - expired, -1 - revoked
+
+sudo sqlite3 /var/pki/certs.db \
+  'create table cert_req_ids(serial TEXT PRIMARY KEY ASC, certReqId TEXT, timestamp INTEGER, nonce TEXT, transactionID TEXT);' \
+  'CREATE INDEX certReqId_idx on cert_req_ids(certReqId); CREATE INDEX transactionID_idx on cert_req_ids(transactionID);'
+
+cert_req_ids table is used by CMP only and has unconfirmed cert_req_ids; once confirmed (or denied) in CERTCONF message or unconfirmed within 
+$confirm_wait_time_sec, the cert status should be updated in certs table from 2 (on-hold) to either 0 (valid) or revoked (-1) and the record 
+in cert_req_ids should be deleted
+
+//key is base64url_encoded key bytes
+sudo sqlite3 /var/pki/certs.db 'create table keys(kid TEXT PRIMARY KEY ASC, key TEXT);'
+
+sudo sqlite3 /var/pki/acme.db \
+  'create table nonces(nonce TEXT PRIMARY KEY ASC, ip TEXT, expires INTEGER);' \
+  'create index ip_idx on nonces(ip);' \
+  'create index expires_idx on nonces(expires);'
+
+//uri for an account should look like /acme/accounts/<accountID>
+sudo sqlite3 /var/pki/acme.db \
+  'create table accounts(id TEXT PRIMARY KEY ASC, status INTEGER, termsOfServiceAgreed INTEGER, jwk_hash TEXT, kid TEXT, jwk BLOB, contacts BLOB, externalAccountBinding BLOB);' \
+  'create index jwk_hash_idx on accounts(jwk_hash);' \
+  'create index account_status_idx on accounts(status);' \
+  'create index account_kid_idx on accounts(kid);'
+
+//uri for an order should look like /acme/accounts/<accountID>/orders/<orderID>
+sudo sqlite3 /var/pki/acme.db \
+  'PRAGMA foreign_keys = ON;' \
+  'create table orders(id TEXT PRIMARY KEY ASC, status INTEGER, expires INTEGER, identifiers BLOB, notBefore INTEGER, notAfter INTEGER, certSerial TEXT, account TEXT, foreign key(account) references accounts(id) ON DELETE CASCADE);' \
+  'create index order_status_idx on orders(status);' \
+  'create index order_expires_idx on orders(expires);' \
+  'create index notBefore_idx on orders(notBefore);' \
+  'create index notAfter_idx on orders(notAfter);'
+
+//uri for authorizations should look like /acme/accounts/<accountID>/orders/<orderID>/authorizations/<authorizationID>
+sudo sqlite3 /var/pki/acme.db \
+  'PRAGMA foreign_keys = ON;' \
+  'create table authorizations(id TEXT PRIMARY KEY ASC, identifier BLOB, status INTEGER, expires INTEGER, wildcard INTEGER, "order" TEXT, foreign key("order") references orders(id) ON DELETE CASCADE);' \
+  'create index authorization_status_idx on authorizations(status);' \
+  'create index authorization_expires_idx on authorizations(expires);'
+
+//uri for challenges should look like /acme/accounts/<accountID>/orders/<orderID>/authorizations/<authorizationID>/challenges/<challengeID>
+sudo sqlite3 /var/pki/acme.db \
+  'PRAGMA foreign_keys = ON;' \
+  'create table challenges(id TEXT PRIMARY KEY ASC, type TEXT, url TEXT, status INTEGER, token TEXT, error TEXT, validated INTEGER, authorization TEXT, foreign key(authorization) references authorizations(id) ON DELETE CASCADE);' \
+  'create index type_idx on challenges(type);' \
+  'create index challenge_status_idx on challenges(status);' \
+  'create index token_idx on challenges(token);' \
+  'create index validated_idx on challenges(validated);'
+
+nonces table is used for ACME nonces, ip is the acme client's IP address; once the nonce is used, it's removed from the table
+```
+
+18. Start php-fpm8 and nginx services
+
+```
+sudo service nginx start
+sudo service php-fpm8 start
+```
+
+19. Review /var/www/pki.example.com/*/globals.php, update DNS if necessary for pki.example.com and run the php8 tests.php from client folders; for example,
+
+```
+cd  /var/www/pki.example.com/cmp_client
+sudo php8 tests.php
+```
+
+20. Configure certificate database backup (/var/pki/certs.db) and sync with stand-by instance once it is setup similar to production one. ACL for tcp port 22 is required to be open.
+
+```
+cp /home/alpine/pki/backup/backup.sh /home/alpine
+crontab -e
+0 0 * * * /home/alpine/backup.sh
+```

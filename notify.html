@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Expiring Certificates Email Notification Form</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+</head>
+
+<body style="font-family:courier new; background-color:#005580; color:white">
+    <form method="post" action="/notify.php">
+        <fieldset>
+            <legend>Expiring Certificates Email Notification Form</legend>
+            <label for="email">Email:</label><br>
+            <input type="text" size="77" maxlength="64" id="email" name="email" required><br>
+            <label for="expire">Expire within days:</label><br>
+            <input type="text" size="3" maxlength="3" id="expire" name="expire" pattern="[1-9]+[0-9]?[0-9]?" value="30"><br>
+            <input type="submit" name="submit" value="Submit">
+        </fieldset>
+    </form>
+</body>
+</html>

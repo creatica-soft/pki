@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>PKI CMP Client SSL Certificate Request Form</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+</head>
+
+<body style="font-family:courier new; background-color:#005580; color:white">
+    <form method="post" action="cert_request.php">
+        <fieldset>
+            <legend>PKI CMP/S-MIME client SSL certificate request form</legend>
+            <fieldset>
+                <legend>Role</legend>
+                <input type="radio" id="standard" name="role" value="standard" checked>
+                <label for="standard">Standard</label>
+                <input type="radio" id="master" name="role" value="master">
+                <label for="master">Master</label>
+                <input type="radio" id="smime" name="role" value="smime">
+                <label for="smime">S/MIME (Email signing and encrypting)</label><br>
+            </fieldset>
+            <fieldset>
+                <legend>AD login to prove your identity</legend>
+                <label for="username">Username or service account name:</label><br>
+                <input type="text" size="64" id="username" name="username" required><br>
+                <label for="password">Password:</label><br>
+                <input type="password" size="64" id="password" name="password"><br>
+                <label for="pubkey">RSA, DSA or ECDSA public key in PEM format to be signed by CA:</label><br>
+                <textarea rows="10" cols="64" id="pubkey" name="pubkey">
+-----BEGIN PUBLIC KEY-----
+...
+-----END PUBLIC KEY-----
+                </textarea><br>
+            </fieldset>
+            <input type="submit" name="submit" value="Submit">
+        </fieldset>
+    </form>
+</body>
+</html>

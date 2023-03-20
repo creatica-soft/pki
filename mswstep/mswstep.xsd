@@ -1,0 +1,22 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:wstep="http://schemas.microsoft.com/windows/pki/2009/01/enrollment" targetNamespace="http://schemas.microsoft.com/windows/pki/2009/01/enrollment" elementFormDefault="qualified">
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="xml.xsd"/>
+  <xs:element name="DispositionMessage" type="wstep:DispositionMessageType" nillable="true"/>
+  <xs:complexType name="DispositionMessageType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute ref="xs:lang" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name="CertificateEnrollmentWSDetail" nillable="true" type="wstep:CertificateEnrollmentWSDetailType"/>
+  <xs:complexType name="CertificateEnrollmentWSDetailType">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="BinaryResponse" nillable="true" type="xs:string"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="ErrorCode" nillable="true" type="xs:int"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="InvalidRequest" nillable="true" type="xs:boolean"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="RequestID" type="xs:string" nillable="true"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="RequestID" type="xs:string" nillable="true"/>
+</xs:schema>
+

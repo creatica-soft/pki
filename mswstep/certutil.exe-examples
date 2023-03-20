@@ -1,0 +1,304 @@
+certutil -PolicyServer https://pki.example.com/msxcep/ -Anonymous -Policy
+  Name: Internal PKI Certificate Enrollment Policy
+  Id: {CBB0298B-06E0-463F-A81F-5CBC972D3737}
+  Url: https://pki.examples.com/msxcep/
+  NextUpdate: 13/12/2022 5:35 pm
+  LastUpdate: 12/12/2022 5:35 pm
+  Path: C:\ProgramData\Microsoft\Windows\X509Enrollment\89d4ed6b68cf0c6f197ab2004474c2cb7073f475
+  Url Flags = 22 (34)
+    PsfLocationRegistry -- 2
+    PsfAllowUnTrustedCA -- 20 (32)
+  Authentication = 1
+    Anonymous -- 1
+  AllowUntrustedCA: ffffffff
+  Priority: 7ffffffd (2147483645)
+CertUtil: -Policy command completed successfully.
+
+certutil -PolicyServer https://pki.examples.com/msxcep/ -Anonymous -Template
+  Name: Internal PKI Certificate Enrollment Policy
+  Id: {CBB0298B-06E0-463F-A81F-5CBC972D3737}
+  Url: https://pki.examples.com/msxcep/
+3 Templates:
+
+  Template[0]:
+  TemplatePropCommonName = GenericUser
+  TemplatePropFriendlyName = GenericUser
+
+  Template[1]:
+  TemplatePropCommonName = Email
+  TemplatePropFriendlyName = Email
+
+  Template[2]:
+  TemplatePropCommonName = GenericComputer
+  TemplatePropFriendlyName = GenericComputer
+CertUtil: -Template command completed successfully.
+
+certutil -PolicyServer https://pki.examples.com/msxcep/ -Anonymous -Template GenericUser
+  Name: Internal PKI Certificate Enrollment Policy
+  Id: {CBB0298B-06E0-463F-A81F-5CBC972D3737}
+  Url: https://pki.examples.com/msxcep/
+3 Templates:
+
+  Template[0]:
+  TemplatePropCommonName = GenericUser
+  TemplatePropFriendlyName = GenericUser
+CertUtil: -Template command completed successfully.
+
+certutil -PolicyServer https://pki.examples.com/msxcep/ -Anonymous -CA
+  Name: Internal PKI Certificate Enrollment Policy
+  Id: {CBB0298B-06E0-463F-A81F-5CBC972D3737}
+  Url: https://pki.examples.com/msxcep/
+1 CAs:
+
+  CA[0]:
+  CAPropCommonName = Internal Signing CA - G2
+  CAPropCertificateTypes =
+    0: GenericUser
+    1: Email
+    2: GenericComputer
+
+  CAPropWebServers =
+  Enrollment Server Url[0]:
+  Priority 1
+  Authentication 4
+    UserName -- 4
+  AllowRenewalsOnly 0
+  https://pki.examples.com/mswstep/
+  AllowKeyBasedRenewal 0
+
+certutil -v -PolicyServer https://pki.examples.com/msxcep/ -Anonymous -Template
+  Name: Internal PKI Certificate Enrollment Policy
+  Id: {CBB0298B-06E0-463F-A81F-5CBC972D3737}
+  Url: https://pki.examples.com/msxcep/
+3 Templates:
+
+  Template[0]:
+  TemplatePropCommonName = GenericUser
+  TemplatePropFriendlyName = GenericUser
+  TemplatePropEKUs =
+2 ObjectIds:
+    1.3.6.1.5.5.7.3.1 Server Authentication
+    1.3.6.1.5.5.7.3.2 Client Authentication
+
+  TemplatePropCryptoProviders =
+    0: Microsoft Enhanced Cryptographic Provider v1.0
+    1: Microsoft Base Cryptographic Provider v1.0
+
+  TemplatePropMajorRevision = 1
+  TemplatePropSchemaVersion = 1
+  TemplatePropMinorRevision = 0
+  TemplatePropMinimumKeySize = 800 (2048)
+  TemplatePropOID =
+    1.3.6.1.4.1.311.21.8.3216253.15123779.9062035.8017536.559549.172.5014266.7858498 GenericUser
+
+  TemplatePropKeyUsage = a000 (40960)
+  TemplatePropEnrollmentFlags = 0
+
+  TemplatePropSubjectNameFlags = 9
+    CT_FLAG_ENROLLEE_SUPPLIES_SUBJECT -- 1
+    CT_FLAG_OLD_CERT_SUPPLIES_SUBJECT_AND_ALT_NAME -- 8
+
+  TemplatePropPrivateKeyFlags = 10 (16)
+    CTPRIVATEKEY_FLAG_EXPORTABLE_KEY -- 10 (16)
+    CTPRIVATEKEY_FLAG_ATTEST_NONE -- 0
+    TEMPLATE_SERVER_VER_NONE<<CTPRIVATEKEY_FLAG_SERVERVERSION_SHIFT -- 0
+    TEMPLATE_CLIENT_VER_NONE<<CTPRIVATEKEY_FLAG_CLIENTVERSION_SHIFT -- 0
+
+  TemplatePropGeneralFlags = 0
+
+  TemplatePropExtensions =
+3 Extensions:
+
+  Extension[0]:
+    2.5.29.15: Flags = 0, Length = 4
+    Key Usage
+        Digital Signature, Key Encipherment (a0)
+
+  Extension[1]:
+    2.5.29.37: Flags = 1(Critical), Length = 16
+    Enhanced Key Usage
+        Server Authentication (1.3.6.1.5.5.7.3.1)
+        Client Authentication (1.3.6.1.5.5.7.3.2)
+
+  Extension[2]:
+    1.3.6.1.4.1.311.20.2: Flags = 0, Length = 18
+    Certificate Template Name (Certificate Type)
+        GenericUser
+
+  TemplatePropValidityPeriod = 2 Years
+  TemplatePropRenewalPeriod = 100 Weeks
+
+  Template[1]:
+  TemplatePropCommonName = Email
+  TemplatePropFriendlyName = Email
+  TemplatePropEKUs =
+1 ObjectIds:
+    1.3.6.1.5.5.7.3.4 Secure Email
+
+  TemplatePropCryptoProviders =
+    0: Microsoft Enhanced Cryptographic Provider v1.0
+    1: Microsoft Base Cryptographic Provider v1.0
+
+  TemplatePropMajorRevision = 1
+  TemplatePropSchemaVersion = 1
+  TemplatePropMinorRevision = 0
+  TemplatePropMinimumKeySize = 800 (2048)
+  TemplatePropOID =
+    1.3.6.1.4.1.311.21.8.3216253.15123779.9062035.8017536.559549.172.5014266.7858497 Email
+
+  TemplatePropKeyUsage = e000 (57344)
+  TemplatePropEnrollmentFlags = 1
+    CT_FLAG_INCLUDE_SYMMETRIC_ALGORITHMS -- 1
+
+  TemplatePropSubjectNameFlags = 10008 (65544)
+    CT_FLAG_OLD_CERT_SUPPLIES_SUBJECT_AND_ALT_NAME -- 8
+    CT_FLAG_ENROLLEE_SUPPLIES_SUBJECT_ALT_NAME -- 10000 (65536)
+
+  TemplatePropPrivateKeyFlags = 10 (16)
+    CTPRIVATEKEY_FLAG_EXPORTABLE_KEY -- 10 (16)
+    CTPRIVATEKEY_FLAG_ATTEST_NONE -- 0
+    TEMPLATE_SERVER_VER_NONE<<CTPRIVATEKEY_FLAG_SERVERVERSION_SHIFT -- 0
+    TEMPLATE_CLIENT_VER_NONE<<CTPRIVATEKEY_FLAG_CLIENTVERSION_SHIFT -- 0
+
+  TemplatePropGeneralFlags = 0
+
+  TemplatePropExtensions =
+3 Extensions:
+
+  Extension[0]:
+    2.5.29.15: Flags = 0, Length = 4
+    Key Usage
+        Digital Signature, Non-Repudiation, Key Encipherment (e0)
+
+  Extension[1]:
+    2.5.29.37: Flags = 1(Critical), Length = c
+    Enhanced Key Usage
+        Secure Email (1.3.6.1.5.5.7.3.4)
+
+  Extension[2]:
+    1.3.6.1.4.1.311.20.2: Flags = 0, Length = c
+    Certificate Template Name (Certificate Type)
+        Email
+
+  TemplatePropValidityPeriod = 2 Years
+  TemplatePropRenewalPeriod = 100 Weeks
+
+  Template[2]:
+  TemplatePropCommonName = GenericComputer
+  TemplatePropFriendlyName = GenericComputer
+  TemplatePropEKUs =
+2 ObjectIds:
+    1.3.6.1.5.5.7.3.1 Server Authentication
+    1.3.6.1.5.5.7.3.2 Client Authentication
+
+  TemplatePropCryptoProviders =
+    0: Microsoft Enhanced Cryptographic Provider v1.0
+    1: Microsoft Base Cryptographic Provider v1.0
+
+  TemplatePropMajorRevision = 1
+  TemplatePropSchemaVersion = 1
+  TemplatePropMinorRevision = 0
+  TemplatePropMinimumKeySize = 800 (2048)
+  TemplatePropOID =
+    1.3.6.1.4.1.311.21.8.3216253.15123779.9062035.8017536.559549.172.5014266.7858499 GenericComputer
+
+  TemplatePropKeyUsage = a000 (40960)
+  TemplatePropEnrollmentFlags = 0
+
+  TemplatePropSubjectNameFlags = 9
+    CT_FLAG_ENROLLEE_SUPPLIES_SUBJECT -- 1
+    CT_FLAG_OLD_CERT_SUPPLIES_SUBJECT_AND_ALT_NAME -- 8
+
+  TemplatePropPrivateKeyFlags = 10 (16)
+    CTPRIVATEKEY_FLAG_EXPORTABLE_KEY -- 10 (16)
+    CTPRIVATEKEY_FLAG_ATTEST_NONE -- 0
+    TEMPLATE_SERVER_VER_NONE<<CTPRIVATEKEY_FLAG_SERVERVERSION_SHIFT -- 0
+    TEMPLATE_CLIENT_VER_NONE<<CTPRIVATEKEY_FLAG_CLIENTVERSION_SHIFT -- 0
+
+  TemplatePropGeneralFlags = 40 (64)
+    CT_FLAG_MACHINE_TYPE -- 40 (64)
+
+  TemplatePropExtensions =
+3 Extensions:
+
+  Extension[0]:
+    2.5.29.15: Flags = 0, Length = 4
+    Key Usage
+        Digital Signature, Key Encipherment (a0)
+
+  Extension[1]:
+    2.5.29.37: Flags = 1(Critical), Length = 16
+    Enhanced Key Usage
+        Server Authentication (1.3.6.1.5.5.7.3.1)
+        Client Authentication (1.3.6.1.5.5.7.3.2)
+
+  Extension[2]:
+    1.3.6.1.4.1.311.20.2: Flags = 0, Length = 20
+    Certificate Template Name (Certificate Type)
+        GenericComputer
+
+  TemplatePropValidityPeriod = 2 Years
+  TemplatePropRenewalPeriod = 100 Weeks
+
+certutil -v -PolicyServer https://pki.examples.com/msxcep/ -Anonymous -Template Email
+  Name: Internal PKI Certificate Enrollment Policy
+  Id: {CBB0298B-06E0-463F-A81F-5CBC972D3737}
+  Url: https://pki.examples.com/msxcep/
+3 Templates:
+
+  Template[1]:
+  TemplatePropCommonName = Email
+  TemplatePropFriendlyName = Email
+  TemplatePropEKUs =
+1 ObjectIds:
+    1.3.6.1.5.5.7.3.4 Secure Email
+
+  TemplatePropCryptoProviders =
+    0: Microsoft Enhanced Cryptographic Provider v1.0
+    1: Microsoft Base Cryptographic Provider v1.0
+
+  TemplatePropMajorRevision = 1
+  TemplatePropSchemaVersion = 1
+  TemplatePropMinorRevision = 0
+  TemplatePropMinimumKeySize = 800 (2048)
+  TemplatePropOID =
+    1.3.6.1.4.1.311.21.8.3216253.15123779.9062035.8017536.559549.172.5014266.7858497 Email
+
+  TemplatePropKeyUsage = e000 (57344)
+  TemplatePropEnrollmentFlags = 1
+    CT_FLAG_INCLUDE_SYMMETRIC_ALGORITHMS -- 1
+
+  TemplatePropSubjectNameFlags = 10008 (65544)
+    CT_FLAG_OLD_CERT_SUPPLIES_SUBJECT_AND_ALT_NAME -- 8
+    CT_FLAG_ENROLLEE_SUPPLIES_SUBJECT_ALT_NAME -- 10000 (65536)
+
+  TemplatePropPrivateKeyFlags = 10 (16)
+    CTPRIVATEKEY_FLAG_EXPORTABLE_KEY -- 10 (16)
+    CTPRIVATEKEY_FLAG_ATTEST_NONE -- 0
+    TEMPLATE_SERVER_VER_NONE<<CTPRIVATEKEY_FLAG_SERVERVERSION_SHIFT -- 0
+    TEMPLATE_CLIENT_VER_NONE<<CTPRIVATEKEY_FLAG_CLIENTVERSION_SHIFT -- 0
+
+  TemplatePropGeneralFlags = 0
+
+  TemplatePropExtensions =
+3 Extensions:
+
+  Extension[0]:
+    2.5.29.15: Flags = 0, Length = 4
+    Key Usage
+        Digital Signature, Non-Repudiation, Key Encipherment (e0)
+
+  Extension[1]:
+    2.5.29.37: Flags = 1(Critical), Length = c
+    Enhanced Key Usage
+        Secure Email (1.3.6.1.5.5.7.3.4)
+
+  Extension[2]:
+    1.3.6.1.4.1.311.20.2: Flags = 0, Length = c
+    Certificate Template Name (Certificate Type)
+        Email
+
+  TemplatePropValidityPeriod = 2 Years
+  TemplatePropRenewalPeriod = 100 Weeks
+  
+  
