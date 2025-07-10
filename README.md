@@ -24,7 +24,7 @@ the certificate.
 
 MS-XCEP is anonymous and MS-WSTEP uses AD LDAP username and password authentication. Default user role is standard. Trusted users can be added to the master role via lib/config.php.
 
-By default MS-XCEP provides three certificate templates (GenericUser, Email and GenericComputer). Additional templates may be add via msxcep/globals.php file.
+By default MS-XCEP provides three certificate templates (GenericUser, Email and GenericComputer). Additional templates may be added via msxcep/globals.php file.
 
 ### Usage example with openssl cmp (see https://www.openssl.org/docs/man3.0/man1/openssl-cmp.html)
 
@@ -249,9 +249,7 @@ nonces table is used for ACME nonces, ip is the acme client's IP address; once t
 ```
 
 There is a plan to upgrade it to postgres cluster to be able to use anycast technology, 
-which would not only make PKI servers in LAT and TDR load-balanced and redundant but also closer to end users.
-
-This could also serve as a proof-of-concept of anycast. Unfortunately network team is not very cooperative in anycast.
+which would not only make PKI servers load-balanced and redundant but also closer to end users.
 
 ### Common PHP library
 
@@ -339,7 +337,7 @@ Recommended ACME client is Certbot from Let's Encrypt.
 ### Enrollment over Secure Transport
 
 This is a simplified version of both CMP and CMC (rfc5273) protocols. Three well-known URIs are supported: cacerts, simpleenroll and simplereenroll. 
-Certificate revocation, which requires full CMC, is not supported since it is optional in rfc7030. Avifors AD username and password as well as SSL client certificate authentication with standard and master roles are supported. Same as in CMP, no domain validation. EST clients do exist but are not required. Certificates can simply be requested using curl and openssl req, base64 and pkcs7 commands. Both openssl versions (1 and 3) work with EST server.
+Certificate revocation, which requires full CMC, is not supported since it is optional in rfc7030. AD username and password as well as SSL client certificate authentication with standard and master roles are supported. Same as in CMP, no domain validation. EST clients do exist but are not required. Certificates can simply be requested using curl and openssl req, base64 and pkcs7 commands. Both openssl versions (1 and 3) work with EST server.
 
 
 ### Certificate Enrollment Protocol MS-XCEP
