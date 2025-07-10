@@ -1,7 +1,7 @@
 ### Installation
 
 1. Create alpine VM instance (openstack or vmware) 1 cpu, 1GB of ram and disk should be more than enough
-1.1. Disable IPv6 with
+1.1. Optionally disable IPv6 with
 
 ```
 vi /etc/sysctl.conf
@@ -29,7 +29,7 @@ nameserver 10.1.1.1
 nameserver 10.1.1.2
 ```
 
-2. Create alpine group and user with rsa key ssh access for management (same key is shared between LAT and TDR)
+2. Create alpine group and user with rsa key ssh access for management
 
 ```
 addgoup alpine
@@ -52,7 +52,7 @@ cp .ssh/id_rsa.pub .ssh/authorized_keys
 ```
 
 4. Disable ssh for root account and getty on ttyS0 in /etc/inittab (reboot is required)
-5. Configure chronyd with time servers such as ntp.example.internal and ntp.tdr.internal
+5. Configure chronyd with time servers such as ntp.example.internal and ntp2.example.internal
 6. Install net-snmp and configure /etc/snmp/snmpd.conf for monitoring by Icinga. Beware of this bug https://gitlab.alpinelinux.org/alpine/aports/-/issues/12309.
 7. Enable community repo and install necessary packages
 
@@ -69,12 +69,7 @@ sudo service open-vm-tools start
 8. Clone this repo as alpine user
 
 ```
-vi .ssh/config
-Host git.corp-apps.com
- HostName git.corp-apps.com
- IdentityFile ~/.ssh/id_rsa_git
-
-git clone ...
+git clone https://github.com/creatica-soft/pki
 ```
 
 9. Copy config files from etc folder to /etc
