@@ -108,8 +108,7 @@
        EST can use both an SSL client certificate authentication and an AD username and a password submitted via a curl POST request along 
        with a Certificate Signing Request (CSR, PKCS #10). If your username.p12 file is protected by the password, then there is no much difference
        in terms of security, you would still need to provide it in your script. The main difference lies in a role attribute, which is part of a 
-       client certificate but is absent from AD user attributes. Therefore, if an account requires a master role, which is usually the case 
-       for only, then the certificate authentication should be used.
+       client certificate but is absent from AD user attributes. Therefore, if an account requires a master role, then the certificate authentication should be used.
     </p>
     <p>
       MS-XCEP is anoymous. MS-WSTEP uses AD LDAP example.com username and password authentication. Default user role is &quot;standard&quot;. If required, certain users may be granted &quot;master&quot; role via config file globals.php.
@@ -119,7 +118,7 @@
        attribute set to &quot;standard&quot;. Standard role is not allowed to request wildcasrd certificates. 
     </p>
     <p>
-       Master role in CMP is can be granted to a service account if needed.
+       Master role in CMP can be granted to a service account if needed.
     </p>
     <p>
        ACME does not require roles because as long as we can perform a domain validation, we can issue a DV certificate, 
