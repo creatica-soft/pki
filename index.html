@@ -105,11 +105,11 @@
       In case of ACME, we rely on the shared secrets and do require them. They may be obtained at <a href="key_request.html">key_request.html</a>.
     </p>
     <p>
-       EST can use both an SSL client certificate authentication and an Avifors AD username and a password submitted via a curl POST request along 
+       EST can use both an SSL client certificate authentication and an AD username and a password submitted via a curl POST request along 
        with a Certificate Signing Request (CSR, PKCS #10). If your username.p12 file is protected by the password, then there is no much difference
        in terms of security, you would still need to provide it in your script. The main difference lies in a role attribute, which is part of a 
-       client certificate but is absent from Avifors AD user attributes. Therefore, if an account requires a master role, which is usually the case 
-       for BigHaiku only, then the certificate authentication should be used.
+       client certificate but is absent from AD user attributes. Therefore, if an account requires a master role, which is usually the case 
+       for only, then the certificate authentication should be used.
     </p>
     <p>
       MS-XCEP is anoymous. MS-WSTEP uses AD LDAP example.com username and password authentication. Default user role is &quot;standard&quot;. If required, certain users may be granted &quot;master&quot; role via config file globals.php.
@@ -119,18 +119,16 @@
        attribute set to &quot;standard&quot;. Standard role is not allowed to request wildcasrd certificates. 
     </p>
     <p>
-       Master role in CMP is usually granted to a BigHaiku service account if requested using a Jira ticket.
+       Master role in CMP is can be granted to a service account if needed.
     </p>
     <p>
        ACME does not require roles because as long as we can perform a domain validation, we can issue a DV certificate, 
-       even a wildcard one. So if you're not a BigHaiku and would like to get a wildcard certificate, this is your only option besides applying
-       for a master role, which is unlikely to be granted.
+       even a wildcard one. So if you would like to get a wildcard certificate, this is your only option.
     </p>
     <p>
        End entity (EE) certificates other than the client certificate, will have an owner attribute set to the common name
        of the client certificate (i.e. a username or a service account name) in CMP. In ACME, the external account binding kid will
-       be used as an owner of a certificate. The kid equals to the username as well. EST certificate is the same, it will have an owner set to
-       Avifors AD account.
+       be used as an owner of a certificate. The kid equals to the username as well. EST certificate is the same, it will have an owner set to AD account.
     </p>
     <p>
        In CMP, certificate update or revocation operations are restricted to the certificate owner. Another words, non-owner will not be
@@ -262,9 +260,8 @@ certreq -enroll -policyserver https://pki.example.com/msxcep/ -machine GenericCo
       Simplicity comes with limitations. For example, a certificate revocation is not supported. A certificate may still be revoked using CMP.
     </p>
     <p>
-      Both Avifors AD username and password as well as an SSL client certificate authentication are supported. An SSL client certificate carries a 
-      role attributes, which may be standard or master. Master role may request wildcard certificates. At the moment it is strickly reserved for 
-      BigHaiku. If you are not a BigHaiku, then you may use ACME to request wildcard certificates.
+      Both  AD username and password as well as an SSL client certificate authentication are supported. An SSL client certificate carries a 
+      role attributes, which may be standard or master. Master role may request wildcard certificates. You may use ACME to request wildcard certificates.
     </p>
 
     <h3 id="pubkey">How to generate an RSA, DSA or ECDSA key for an SSL client certificate used in EST, CMP or SMIME</h3>
@@ -400,7 +397,7 @@ curl -v --cacert cacerts.pem --cert username.p12[:password] --data-binary @test.
       any domain from the allowed domain suffixes list.
     </p>
     <p>
-      ACME protocol usually involes a few transactions or network data exchanges if you wish, before the certificate can be issued. This
+      ACME protocol usually involves a few transactions or network data exchanges if you wish, before the certificate can be issued. This
       is in contrast to CMP protocol, which is able to provide a certificate after the first request. 
     </p>
     <p>
@@ -424,12 +421,12 @@ curl -v --cacert cacerts.pem --cert username.p12[:password] --data-binary @test.
        For more info, please see <a href="https://datatracker.ietf.org/doc/html/rfc8555#section-7.3.4">https://datatracker.ietf.org/doc/html/rfc8555#section-7.3.4</a>.
     </p>
     <p>
-      In order to obtain the shared secret key, please authenticate with your Avifors Active Directory username and password using
+      In order to obtain the shared secret key, please authenticate with your  Active Directory username and password using
       this link <a href="https://pki.example.com/key_request.html">https://pki.example.com/key_request.html</a>.
     </p>
     <p>
       Certbot config file or command line argument for the shared secret is &quot;eab-hmac-key&quot;. 
-      Key id argument &quot;eab-kid&quot; argument is for the username.
+      Key id argument &quot;eab-kid&quot; is for the username.
     </p>
     <p>
       The shared key can be updated using the same link anytime. Just do not forget to update the acme client config.
@@ -446,7 +443,7 @@ server = https://pki.example.com/acme
 
 eab-kid = username
 eab-hmac-key = oCY5TB7KocFGuXIdrUMm9xNmnrwI43bMfR1e8g-MRvpMTA1ksP_nPixLK5RCbDikWC-ny5Jpzfr7jApRClCvzA
-email = username@timbredigital.co.nz
+email = username@example.com
 no-eff-email
 
 key-type = rsa
@@ -606,7 +603,7 @@ secret = pass:LrQonrKWG3gYF0syCpt6omqbBNmnOjvp1SNJwPc9JyTKTSKDGB9GGApmmY0nC_ZUEL
 newkey = priv.key
 subject = "/CN=username"
 certout = username.pem
-recipient = "/CN=Signing CA - G2"
+recipient = "/CN=Signing CA"
 reqexts = v3_ext2
 cert = #
 key = #
@@ -765,13 +762,13 @@ openssl cmp -config openssl.conf -subject &quot;/CN=test.example.internal&quot; 
     </p>
     <ul>
        <li>X509v3 Subject Key Identifier (hash of the certificate public key)</li>
-       <li>X509v3 Authority Key Identifier (keyId of the Signing CA G2 public key)</li> 
+       <li>X509v3 Authority Key Identifier (keyId of the Signing CA public key)</li> 
        <li>X509v3 Key Usage (digitalSignature and keyEncipherment)</li>
        <li>X509v3 Basic Constraints (CA:false)</li>
        <li>X509v3 Extended Key Usage (serverAuth and clientAuth)</li>
        <li>X509v3 Subject Alternative Name (CN from the subject)</li>
        <li>X509v3 CRL Distribution Points (URI pointing to the CRL)</li>
-       <li>Authority Information Access (caIssuers:URI pointing to the Signing CA G2 certificate and OCSP pointing to http://pki.example.com/ocsp/)</li>
+       <li>Authority Information Access (caIssuers:URI pointing to the Signing CA certificate and OCSP pointing to http://pki.example.com/ocsp/)</li>
     </ul>
     <p>
        Forbidden client extensions are:
@@ -883,7 +880,7 @@ done
       All x.509 attribute types listed in rfc4387 are supported: certHash, uri, iHash, iAndSHash, name, cn, sHash, sKIDHash.
     </p>
     <p>
-      For example, to get someone SMIME certificate to exchange encrypted internal emails, use this URI: https://pki.example.com/certificates/search.cgi?uri=email_address. Note that this person needs to request SMIME certificate first using https://pki.example.com/cert_request.html selecting SMIME role and authenticating to Avifors AD.
+      For example, to get someone SMIME certificate to exchange encrypted internal emails, use this URI: https://pki.example.com/certificates/search.cgi?uri=email_address. Note that this person needs to request SMIME certificate first using https://pki.example.com/cert_request.html selecting SMIME role and authenticating to AD.
     </p>
 
 
@@ -893,7 +890,7 @@ done
     </p>
     <p>
        If you lost your client certificate, you may download it again from <a href="cert_request.html">cert_request.html</a>.
-       There is no need to provide a public key in this case. Just prove your identity with your Avifors AD username and password.
+       There is no need to provide a public key in this case. Just prove your identity with your AD username and password.
     </p>
 
     <h3 id="verify">How to verify the issued X509 certificate</h3>
