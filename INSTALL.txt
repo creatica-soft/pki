@@ -97,25 +97,25 @@ sudo adduser nobody mail
 #sudo openssl x509 -new -subj /CN=InternalRootCA -key /etc/ssl/private/root_ca.key -out /etc/ssl/root_ca.pem -extensions v3_ca -extfile /etc/ssl/openssl.cnf -days 3650
 sudo openssl req -x509 -newkey rsa:4096 -subj /CN=InternalRootCA -extensions v3_ca_root -config /etc/ssl/openssl.cnf -days 3650 -out /etc/ssl/root_ca.pem -keyout /etc/ssl/private/root_ca.key -noenc
 sudo openssl x509 -inform PEM -outform DER -in /etc/ssl/root_ca.pem -out /etc/ssl/root_ca.der
-sudo cp /etc/ssl/root_ca.der /var/www/pki.example.com/root_ca.crt
+sudo cp /etc/ssl/root_ca.der /var/www/pki.example.com/pki/root_ca.crt
 ```
 
-13.2 Temporarily set default_bits to 4096 in [req] section in openssl.cnf. Create a subordinate (signing) certificated signed by root CA. It may need to have Digital Signature extension for key usage, so add it in [v3_ca] section of openssl.cnf. It should also have CA Information Access and CRL distribution points extensions in addition to Basic Constraints, Subject Key ID and Authority Key ID. Save its private key in DER format as well and copy der file to /var/www/pki.example.com/signing_ca.crt  for CA Information Access extension to work.
+13.2 Temporarily set default_bits to 4096 in [req] section in openssl.cnf. Create a subordinate (signing) certificated signed by root CA. It may need to have Digital Signature extension for key usage, so add it in [v3_ca] section of openssl.cnf. It should also have CA Information Access and CRL distribution points extensions in addition to Basic Constraints, Subject Key ID and Authority Key ID. Save its private key in DER format as well and copy der file to /var/www/pki.example.com/pki/signing_ca.crt  for CA Information Access extension to work.
 
 ```
 sudo sed -i s/2048/4096/ /etc/ssl/openssl.cnf
 sudo openssl req -CA /etc/ssl/root_ca.pem -CAkey /etc/ssl/private/root_ca.key -subj /CN=InternalSigningCA -extensions v3_ca_sub -config /etc/ssl/openssl.cnf -days 3650 -out /etc/ssl/signing_ca.pem -keyout /etc/ssl/private/signing_ca.key -noenc
 sudo openssl x509 -inform PEM -outform DER -in /etc/ssl/signing_ca.pem -out /etc/ssl/signing_ca.der
-sudo cp /etc/ssl/signing_ca.der /var/www/pki.example.com/signing_ca.crt
+sudo cp /etc/ssl/signing_ca.der /var/www/pki.example.com/pki/signing_ca.crt
 ```
 
-13.3 Set default_bits back to 2048 in [req] section in openssl.cnf. Create an SSL certificate for nginx server, signed by InternalSigningCA. Save it in DER format as well to save it into certs.db once certs.db is created for nginx SSL stapling to work.
+13.3 Set default_bits back to 2048 in [req] section in openssl.cnf. Create an SSL certificate for nginx server, signed by InternalSigningCA. Save it in DER format as well to save it into certs.db once certs.db is created for nginx SSL stapling to work. Add /etc/ssl/signing_ca.pem certificate to pki.example.com.pem to complete the certificate chain. Only root CA is trusted. If nginx server fails to provide intermediate certificate in addition to its own, its own certificate won't validate!
 
 ```
 sudo sed -i s/4096/2048/ /etc/ssl/openssl.cnf
 sudo openssl req -CA /etc/ssl/signing_ca.pem -CAkey /etc/ssl/private/signing_ca.key -subj /CN=pki.example.com -extensions usr_cert -addext "subjectAltName=DNS:pki.example.com" -config /etc/ssl/openssl.cnf -days 365 -out /etc/ssl/pki.example.com.pem -keyout /etc/ssl/private/pki.example.com.key -noenc
+sudo cat /etc/ssl/signing_ca.pem | sudo tee -a /etc/ssl/pki.example.com.pem
 sudo openssl x509 -inform PEM -outform DER -in /etc/ssl/pki.example.com.pem -out /etc/ssl/pki.example.com.der
-cd /var/www/pki.example.com
 ```
 
 13.4 Ensure the correct file permissions on private keys and certificates under /etc/ssl. For best practices keep root_ca.key in a more secure place (offline). php-fmp83 runs as nobody (make sure it's the only account in group nobody), it needs to access signing_ca.key. nginx master process starts as root, so it can read pki.example.com.key.
@@ -125,8 +125,8 @@ grep nobody /etc/passwd
 nobody:x:65534:65534:nobody:/:/sbin/nologin
 grep nobody /etc/group
 nobody:x:65534:
-chown root:nobody /etc/ssl/private/signing_ca.key
-chmod 440 /etc/ssl/private/signing_ca.key
+sudo chown root:nobody /etc/ssl/private/signing_ca.key
+sudo chmod 440 /etc/ssl/private/signing_ca.key
 ls -la /etc/ssl/private
 drwxr-xr-x 2 root root   4096 Jul  1 08:02 .
 drwxr-xr-x 6 root root   4096 Jul  1 10:19 ..
