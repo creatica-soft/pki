@@ -1,4 +1,4 @@
-FROM arm64v8/alpine
+FROM arm64v8/alpine:3.22
 ARG TZ="Australia/Brisbane"
 RUN cat /etc/alpine-release
 COPY etc/apk/repositories /etc/apk/
@@ -21,16 +21,21 @@ RUN git clone https://github.com/creatica-soft/pki && \
     sudo openssl x509 -inform PEM -outform DER -in /etc/ssl/signing_ca.pem -out /etc/ssl/signing_ca.der && \
     sudo sed -i s/4096/2048/ /etc/ssl/openssl.cnf && \
     sudo openssl req -CA /etc/ssl/signing_ca.pem -CAkey /etc/ssl/private/signing_ca.key -subj /CN=pki.example.com -extensions usr_cert -addext "subjectAltName=DNS:pki.example.com" -config /etc/ssl/openssl.cnf -days 365 -out /etc/ssl/pki.example.com.pem -keyout /etc/ssl/private/pki.example.com.key -noenc && \
+    sudo cat /etc/ssl/signing_ca.pem | sudo tee -a /etc/ssl/pki.example.com.pem && \
     sudo openssl x509 -inform PEM -outform DER -in /etc/ssl/pki.example.com.pem -out /etc/ssl/pki.example.com.der && \
+    sudo chown root:nobody /etc/ssl/private/signing_ca.key && \
+    sudo chmod 440 /etc/ssl/private/signing_ca.key && \
     sudo cat /etc/ssl/root_ca.pem | sudo tee -a /etc/ssl/certs/ca-certificates.crt && \
     sudo mkdir /var/www/pki.example.com && \
-    sudo cp /etc/ssl/root_ca.der /var/www/pki.example.com/root_ca.crt && \
-    sudo cp /etc/ssl/signing_ca.der /var/www/pki.example.com/signing_ca.crt && \
+    sudo mkdir /var/www/pki.example.com/pki && \
+    sudo cp /etc/ssl/root_ca.der /var/www/pki.example.com/pki/root_ca.crt && \
+    sudo cp /etc/ssl/signing_ca.der /var/www/pki.example.com/pki/signing_ca.crt && \
     sudo sed -i s/signing_ca.pem/root_ca.pem/g /etc/ssl/openssl.cnf && \
     sudo sed -i s/signing_ca.key/root_ca.key/g /etc/ssl/openssl.cnf && \
     sudo touch /etc/ssl/index.txt && \
     sudo echo 123456789ABCDEF0123456789ABCDEF0123456789ABCDF |sudo tee /etc/ssl/crlnumber && \
-    sudo openssl ca -gencrl -out /var/www/pki.example.com/root_ca.crl -config /etc/ssl/openssl.cnf -crldays 3650 && \
+    sudo mkdir /var/www/pki.example.com/pki && \
+    sudo openssl ca -gencrl -out /var/www/pki.example.com/pki/root_ca.crl -config /etc/ssl/openssl.cnf -crldays 3650 && \
     sudo sed -i s/root_ca.pem/signing_ca.pem/g /etc/ssl/openssl.cnf && \
     sudo sed -i s/root_ca.key/signing_ca.key/g /etc/ssl/openssl.cnf && \
     sudo cp -r acme certificates cmp cmp_client crls est est_client lib mswstep msxcep ocsp domains.txt *.html *.php *.ico /var/www/pki.example.com/ && \
