@@ -30,11 +30,13 @@ set_exception_handler('exception_handler');
 
 if (empty($_REQUEST["username"]) || empty($_REQUEST["password"]))
   acmeError('usage', 'Usage: ' . full_request_uri() . '?username=<username>&password=<password>', 400);
-    
+
 $username = sanitize($_REQUEST["username"]);
 $password = sanitize($_REQUEST["password"]);
 
-auth($username, $password);
+//This is for testing only! Comment out "if" line in production
+if ($username != "test")
+  auth($username, $password);
 
 //at this point we authenticated the user and can
 //issue CMP and/or ACME client a shared key

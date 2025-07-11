@@ -78,13 +78,13 @@ git clone https://github.com/creatica-soft/pki
 mkdir /var/www/pki/example.com
 ```
 
-11. Copy acme, certificates, cmp, crls, est, lib, mswstep, msxcep, ocsp folders and *.html, *.php, *.ico, domains.txt files from pki to /var/www/pki.example.com
+11. Copy acme, certificates, cmp, cmp_client, crls, est, est_client, lib, mswstep, msxcep, ocsp folders and domains.txt, *.html, *.php, *.ico, domains.txt files from pki to /var/www/pki.example.com
 
 ```
-cp -r acme certificates cmp crls est lib mswstep msxcep ocsp *.html *.php *.ico domains.txt /var/www/pki.example.com/
+cp -r acme certificates cmp cmp_client crls est est_client lib mswstep msxcep ocsp domains.txt *.html *.php *.ico domains.txt /var/www/pki.example.com/
 ```
 
-12. Add user "nobody" into mail group for php mail to work. 
+12. Add user "nobody" into mail group for php mail to work.
 
 ```
 sudo adduser nobody mail
@@ -109,22 +109,30 @@ sudo openssl x509 -inform PEM -outform DER -in /etc/ssl/signing_ca.pem -out /etc
 sudo cp /etc/ssl/signing_ca.der /var/www/pki.example.com/signing_ca.crt
 ```
 
-13.3 Set default_bits back to 2048 in [req] section in openssl.cnf. Create an SSL certificate for nginx server, signed by InternalSigningCA.
+13.3 Set default_bits back to 2048 in [req] section in openssl.cnf. Create an SSL certificate for nginx server, signed by InternalSigningCA. Save it in DER format as well to save it into certs.db once certs.db is created for nginx SSL stapling to work.
 
 ```
 sudo sed -i s/4096/2048/ /etc/ssl/openssl.cnf
 sudo openssl req -CA /etc/ssl/signing_ca.pem -CAkey /etc/ssl/private/signing_ca.key -subj /CN=pki.example.com -extensions usr_cert -addext "subjectAltName=DNS:pki.example.com" -config /etc/ssl/openssl.cnf -days 365 -out /etc/ssl/pki.example.com.pem -keyout /etc/ssl/private/pki.example.com.key -noenc
+sudo openssl x509 -inform PEM -outform DER -in /etc/ssl/pki.example.com.pem -out /etc/ssl/pki.example.com.der
+cd /var/www/pki.example.com
 ```
 
-13.4 Ensure the correct file permissions on private keys and certificates under /etc/ssl. For best practices keep root_ca.key in a more secure place (offline).
+13.4 Ensure the correct file permissions on private keys and certificates under /etc/ssl. For best practices keep root_ca.key in a more secure place (offline). php-fmp83 runs as nobody (make sure it's the only account in group nobody), it needs to access signing_ca.key. nginx master process starts as root, so it can read pki.example.com.key.
 
 ```
+grep nobody /etc/passwd
+nobody:x:65534:65534:nobody:/:/sbin/nologin
+grep nobody /etc/group
+nobody:x:65534:
+chown root:nobody /etc/ssl/private/signing_ca.key
+chmod 440 /etc/ssl/private/signing_ca.key
 ls -la /etc/ssl/private
 drwxr-xr-x 2 root root   4096 Jul  1 08:02 .
 drwxr-xr-x 6 root root   4096 Jul  1 10:19 ..
--r--r----- 1 root root 1704 Jul 10 23:30 pki.example.com.key
--r--r----- 1 root root 3272 Jul 10 22:38 root_ca.key
--r--r----- 1 root root 3272 Jul 10 23:14 signing_ca.key
+-r-------- 1 root root 1704 Jul 10 23:30 pki.example.com.key
+-r-------- 1 root root 3272 Jul 10 22:38 root_ca.key # move it offline!
+-r--r----- 1 root nobody 3272 Jul 10 23:14 signing_ca.key
 
  ls -la /etc/ssl/*.der
 -rw-r--r-- 1 root root 1406 Jul  1 07:20 /etc/ssl/root_ca.der
@@ -138,10 +146,22 @@ lrwxrwxrwx 1 root root   25 Jul  1 06:53 /etc/ssl/cert.pem -> certs/ca-certifica
 -rw-r--r-- 1 root root 3937 Jul  5 10:31 /etc/ssl/pki.example.com.pem
 ```
 
-14. Add root CA's cert into the /etc/ssl/certs/ca-certificates.crt file.
+13.5 Add root CA's cert into the /etc/ssl/certs/ca-certificates.crt file.
 
 ```
 sudo cat /etc/ssl/root_ca.pem |sudo tee -a /etc/ssl/certs/ca-certificates.crt
+```
+
+14. Generate empty CRL for certificates signed with InternalRootCA. CRLs for certificates signed with InternalSigningCA are generated on the fly during CRL requests.
+
+```
+sudo sed -i s/signing_ca.pem/root_ca.pem/g /etc/ssl/openssl.cnf
+sudo sed -i s/signing_ca.key/root_ca.key/g /etc/ssl/openssl.cnf
+sudo touch /etc/ssl/index.txt
+sudo echo 123456789ABCDEF0123456789ABCDEF0123456789ABCDF |sudo tee /etc/ssl/crlnumber
+sudo openssl ca -gencrl -out /var/www/pki.example.com/root_ca.crl -config /etc/ssl/openssl.cnf -crldays 3650
+sudo sed -i s/root_ca.pem/signing_ca.pem/g /etc/ssl/openssl.cnf
+sudo sed -i s/root_ca.key/signing_ca.key/g /etc/ssl/openssl.cnf
 ```
 
 15. Add nginx, sshd and php-fpm8 to default runlevel
@@ -215,6 +235,8 @@ sudo sqlite3 /var/pki/acme.db \
 
 sudo chown -R nobody:alpine /var/pki # for nginx access
 
+sudo -u nobody php83 save_cert.php /etc/ssl/pki.example.com.der # for nginx SSL stapling to work
+
 nonces table is used for ACME nonces, ip is the acme client's IP address; once the nonce is used, it's removed from the table
 ```
 
@@ -222,14 +244,17 @@ nonces table is used for ACME nonces, ip is the acme client's IP address; once t
 
 ```
 sudo service nginx start
-sudo service php-fpm8 start
+sudo service php-fpm83  start
 ```
 
-19. Review /var/www/pki.example.com/*/globals.php, update DNS if necessary for pki.example.com and run the php8 tests.php from client folders; for example,
+19. Review /var/www/pki.example.com/*/globals.php, update DNS if necessary for pki.example.com or /etc/hosts file, obtain secret key from https://pki.example.com/key_request.html. If AD is not available, use username test with any password to get the key - only for testing, comment out if $username == "test" line in key_request.php in production! Update subject and secret in [ir] section of openssl.conf file. Create private keys for a user priv.key and for a host test.example.internal.key and run the php8 tests.php from *_client folders; for example,
 
 ```
 cd  /var/www/pki.example.com/cmp_client
-sudo php8 tests.php
+openssl genrsa -out priv.key 2048
+openssl genrsa -out test.example.internal.key 2048
+vi openssl.conf # update the secret in [ir] section
+sudo php83 tests.php
 ```
 
 20. Configure certificate database backup (/var/pki/certs.db) and sync with stand-by instance once it is setup similar to production one. ACL for tcp port 22 is required to be open.

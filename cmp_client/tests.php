@@ -5,7 +5,7 @@ require_once 'sql.php';
 require_once 'certificate.php';
 
 $now = date_create(null, new DateTimeZone("+0000"))->getTimestamp();
-$openssl_path = "/usr/bin/openssl3";
+$openssl_path = "/usr/bin/openssl";
 
 $verbosity = 3; //0 = EMERG, 1 = ALERT, 2 = CRIT, 3 = ERR, 4 = WARN, 5 = NOTE, 6 = INFO, 7 = DEBUG, 8 = TRACE. Defaults to 6 = INFO
 $sections = "cmp";
@@ -84,7 +84,7 @@ while($runNumber++ < $numberOfRuns) {
                 print_r($output);
               }
             } else {
-              $sn = gmp_init(getCertSerialNumber('test.lat.internal.crt'));
+              $sn = gmp_init(getCertSerialNumber('test.example.internal.crt'));
               $serialNumbers[] = gmp_strval($sn);
             }
             unset($output);
@@ -115,7 +115,7 @@ while($runNumber++ < $numberOfRuns) {
                 print_r($output);
               }
             } else {
-              $sn = gmp_init(getCertSerialNumber('test.lat.internal.crt'));
+              $sn = gmp_init(getCertSerialNumber('test.example.internal.crt'));
               $serialNumbers[] = gmp_strval($sn);
             }
             unset($output);
