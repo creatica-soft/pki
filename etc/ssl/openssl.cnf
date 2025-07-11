@@ -10,7 +10,7 @@ tsa_policy3 = 1.2.3.4.5.7
 [ ca ]
 default_ca      = signing_ca                # The default ca section
 
-[ internal_signing_ca_g2 ]
+[ signing_ca ]
 
 dir             = /etc/ssl              # Where everything is kept
 certs           = $dir/certs            # Where the issued certs are kept
@@ -59,7 +59,8 @@ default_bits            = 2048
 default_keyfile         = privkey.pem
 distinguished_name      = req_distinguished_name
 attributes              = req_attributes
-x509_extensions = v3_ca # The extensions to add to the self signed cert
+x509_extensions = v3_ca_sub # The extensions to add to the subordinate cert
+#x509_extensions = v3_ca_root # The extensions to add to the self signed root cert
 
 string_mask = utf8only
 
@@ -89,23 +90,30 @@ challengePassword_max           = 20
 unstructuredName                = An optional company name
 
 [ usr_cert ]
-basicConstraints=CA:FALSE
-subjectKeyIdentifier=hash
-authorityKeyIdentifier=keyid,issuer
-authorityInfoAccess = caIssuers;URI:http://pki.example.com/pki/signing_ca.crt
 keyUsage = digitalSignature, keyEncipherment
 extendedKeyUsage = serverAuth,clientAuth
+basicConstraints=CA:FALSE
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid:always,issuer
+authorityInfoAccess = caIssuers;URI:http://pki.example.com/pki/signing_ca.crt
 crlDistributionPoints = URI:http://pki.example.com/pki/signing_ca.crl
 
 [ v3_req ]
 basicConstraints = CA:FALSE
 keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 
-[ v3_ca ]
+[ v3_ca_sub ]
+keyUsage = digitalSignature, cRLSign, keyCertSign
+basicConstraints = critical,CA:true
 subjectKeyIdentifier=hash
 authorityKeyIdentifier=keyid:always,issuer
-basicConstraints = critical,CA:true
+authorityInfoAccess = caIssuers;URI:http://pki.example.com/pki/root_ca.crt
+crlDistributionPoints = URI:http://pki.example.com/pki/signing_ca.crl
+
+[ v3_ca_root ]
 keyUsage = cRLSign, keyCertSign
+basicConstraints = critical,CA:true
+subjectKeyIdentifier=hash
 
 [ crl_ext ]
 authorityKeyIdentifier=keyid:always

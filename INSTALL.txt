@@ -32,7 +32,7 @@ nameserver 10.1.1.2
 2. Create alpine group and user with rsa key ssh access for management
 
 ```
-addgoup alpine
+addgroup alpine
 adduser -G alpine -D alpine
 sed -i -e '/^alpine/s/!/*/' /etc/shadow
 ```
@@ -51,19 +51,17 @@ ssh-keygen
 cp .ssh/id_rsa.pub .ssh/authorized_keys
 ```
 
-4. Disable ssh for root account and getty on ttyS0 in /etc/inittab (reboot is required)
+4. Disable ssh for root account and getty on ttyS0 in /etc/inittab if it's not already disabled by distro (reboot is required)
 5. Configure chronyd with time servers such as ntp.example.internal and ntp2.example.internal
-6. Install net-snmp and configure /etc/snmp/snmpd.conf for monitoring by Icinga. Beware of this bug https://gitlab.alpinelinux.org/alpine/aports/-/issues/12309.
+6. Install net-snmp and configure /etc/snmp/snmpd.conf for monitoring if needed. Beware of this bug https://gitlab.alpinelinux.org/alpine/aports/-/issues/12309.
 7. Enable community repo and install necessary packages
 
 ```
 sudo vi /etc/apk/repositories
-http://dl-cdn.alpinelinux.org/alpine/v3.16/community
+http://dl-cdn.alpinelinux.org/alpine/v3.20/community
 
 sudo apk update
-sudo apk add php8 php8-openssl php8-fpm php8-curl php8-soap php8-xml uuidgen nginx git open-vm-tools logrotate php8-gmp coreutils nginx-mod-http-headers-more php8-ldap php8-sqlite3 php8-mbstring sqlite openssl3 net-snmp
-sudo rc-update add open-vm-tools
-sudo service open-vm-tools start
+sudo apk add php8 php83-openssl php83-fpm php83-curl php83-soap php83-xml uuidgen nginx git logrotate php83-gmp coreutils nginx-mod-http-headers-more php83-ldap php83-sqlite3 php83-mbstring sqlite openssl3 openssh
 ```
 
 8. Clone this repo as alpine user
@@ -76,18 +74,57 @@ git clone https://github.com/creatica-soft/pki
 
 10. Create /var/www/pki.example.com folder
 
-11. Copy some files and folders from pki to /var/www/pki.example.com. 
+```
+mkdir /var/www/pki/example.com
+```
+
+11. Copy acme, certificates, cmp, crls, est, lib, mswstep, msxcep, ocsp folders and *.html, *.php, *.ico, domains.txt files from pki to /var/www/pki.example.com
+
+```
+cp -r acme certificates cmp crls est lib mswstep msxcep ocsp *.html *.php *.ico domains.txt /var/www/pki.example.com/
+```
 
 12. Add user "nobody" into mail group for php mail to work. 
 
-13. Ensure the correct permissions on privaate keys and certificates under /etc/ssl; 
+```
+sudo adduser nobody mail
+```
+
+13. Generate a private key for root CA, then create root CA self-signed certificate and store it in both formats DER and PEM. The first two commented out commands could be replaced by the following one. It only needs Key Cert Sign and CLR sign key usage extension in addition to Basic Constraints and Subject Key ID. Copy DER file to /var/www/pki.example.com/root_ca.crt for CA Information Access extension to work.
+
+```
+#sudo openssl genrsa -out /etc/ssl/private/root_ca.key 4096
+#sudo openssl x509 -new -subj /CN=InternalRootCA -key /etc/ssl/private/root_ca.key -out /etc/ssl/root_ca.pem -extensions v3_ca -extfile /etc/ssl/openssl.cnf -days 3650
+sudo openssl req -x509 -newkey rsa:4096 -subj /CN=InternalRootCA -extensions v3_ca_root -config /etc/ssl/openssl.cnf -days 3650 -out /etc/ssl/root_ca.pem -keyout /etc/ssl/private/root_ca.key -noenc
+sudo openssl x509 -inform PEM -outform DER -in /etc/ssl/root_ca.pem -out /etc/ssl/root_ca.der
+sudo cp /etc/ssl/root_ca.der /var/www/pki.example.com/root_ca.crt
+```
+
+13.2 Temporarily set default_bits to 4096 in [req] section in openssl.cnf. Create a subordinate (signing) certificated signed by root CA. It may need to have Digital Signature extension for key usage, so add it in [v3_ca] section of openssl.cnf. It should also have CA Information Access and CRL distribution points extensions in addition to Basic Constraints, Subject Key ID and Authority Key ID. Save its private key in DER format as well and copy der file to /var/www/pki.example.com/signing_ca.crt  for CA Information Access extension to work.
+
+```
+sudo sed -i s/2048/4096/ /etc/ssl/openssl.cnf
+sudo openssl req -CA /etc/ssl/root_ca.pem -CAkey /etc/ssl/private/root_ca.key -subj /CN=InternalSigningCA -extensions v3_ca_sub -config /etc/ssl/openssl.cnf -days 3650 -out /etc/ssl/signing_ca.pem -keyout /etc/ssl/private/signing_ca.key -noenc
+sudo openssl x509 -inform PEM -outform DER -in /etc/ssl/signing_ca.pem -out /etc/ssl/signing_ca.der
+sudo cp /etc/ssl/signing_ca.der /var/www/pki.example.com/signing_ca.crt
+```
+
+13.3 Set default_bits back to 2048 in [req] section in openssl.cnf. Create an SSL certificate for nginx server, signed by InternalSigningCA.
+
+```
+sudo sed -i s/4096/2048/ /etc/ssl/openssl.cnf
+sudo openssl req -CA /etc/ssl/signing_ca.pem -CAkey /etc/ssl/private/signing_ca.key -subj /CN=pki.example.com -extensions usr_cert -addext "subjectAltName=DNS:pki.example.com" -config /etc/ssl/openssl.cnf -days 365 -out /etc/ssl/pki.example.com.pem -keyout /etc/ssl/private/pki.example.com.key -noenc
+```
+
+13.4 Ensure the correct file permissions on private keys and certificates under /etc/ssl. For best practices keep root_ca.key in a more secure place (offline).
 
 ```
 ls -la /etc/ssl/private
 drwxr-xr-x 2 root root   4096 Jul  1 08:02 .
 drwxr-xr-x 6 root root   4096 Jul  1 10:19 ..
--r--r----- 1 root nobody 3269 Jul  1 07:16 signing_ca.key
--r--r----- 1 root nobody 1705 Jul  1 08:02 pki.example.com.key
+-r--r----- 1 root root 1704 Jul 10 23:30 pki.example.com.key
+-r--r----- 1 root root 3272 Jul 10 22:38 root_ca.key
+-r--r----- 1 root root 3272 Jul 10 23:14 signing_ca.key
 
  ls -la /etc/ssl/*.der
 -rw-r--r-- 1 root root 1406 Jul  1 07:20 /etc/ssl/root_ca.der
@@ -101,22 +138,24 @@ lrwxrwxrwx 1 root root   25 Jul  1 06:53 /etc/ssl/cert.pem -> certs/ca-certifica
 -rw-r--r-- 1 root root 3937 Jul  5 10:31 /etc/ssl/pki.example.com.pem
 ```
 
-13.1. Add CA's cert into the /etc/ssl/ca-certificates.crt file.
+14. Add root CA's cert into the /etc/ssl/certs/ca-certificates.crt file.
 
-14. Request and install SSL web server certificate for nginx with the subject CN=pki.example.com 
+```
+sudo cat /etc/ssl/root_ca.pem |sudo tee -a /etc/ssl/certs/ca-certificates.crt
+```
 
-15. Add nginx and php-fpm8 to default runlevel
+15. Add nginx, sshd and php-fpm8 to default runlevel
 
 ```
 sudo rc-update add nginx
 sudo rc-update add php-fpm8
+sudo rc-update add sshd
 ```
 
 17. Create /var/pki folder owned by nobody:alpine. It will have sqlite3 databases certs.db and acme.db
 
 ```
 sudo mkdir /var/pki
-sudo chown nobody /var/pki
 sudo sqlite3 /var/pki/certs.db \
   'create table certs(serial TEXT PRIMARY KEY ASC, status INTEGER, revocationReason INTEGER, revocationDate INTEGER, notBefore INTEGER, notAfter INTEGER, subject TEXT, owner TEXT, role TEXT, cert BLOB, cn TEXT, fingerprint TEXT, sHash TEXT, iAndSHash TEXT, sKIDHash TEXT);' \
   'CREATE INDEX subj_idx on certs(subject); CREATE INDEX status_idx on certs(status); CREATE INDEX from_idx on certs(notBefore);' \
@@ -173,6 +212,8 @@ sudo sqlite3 /var/pki/acme.db \
   'create index challenge_status_idx on challenges(status);' \
   'create index token_idx on challenges(token);' \
   'create index validated_idx on challenges(validated);'
+
+sudo chown -R nobody:alpine /var/pki # for nginx access
 
 nonces table is used for ACME nonces, ip is the acme client's IP address; once the nonce is used, it's removed from the table
 ```
