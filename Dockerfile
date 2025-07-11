@@ -36,6 +36,7 @@ RUN git clone https://github.com/creatica-soft/pki && \
     sudo cp -r acme certificates cmp cmp_client crls est est_client lib mswstep msxcep ocsp domains.txt *.html *.php *.ico /var/www/pki.example.com/ && \
     sudo chown -R nobody:alpine /var/www/pki.example.com && \
     sudo cp go.sh /usr/bin && \
+    sudo chmod 755 /usr/bin/go.sh && \
     sudo mkdir /var/pki && \
     sudo sqlite3 /var/pki/certs.db \
   'create table certs(serial TEXT PRIMARY KEY ASC, status INTEGER, revocationReason INTEGER, revocationDate INTEGER, notBefore INTEGER, notAfter INTEGER, subject TEXT, owner TEXT, role TEXT, cert BLOB, cn TEXT, fingerprint TEXT, sHash TEXT, iAndSHash TEXT, sKIDHash TEXT);' \
@@ -81,5 +82,5 @@ RUN git clone https://github.com/creatica-soft/pki && \
 USER root
 WORKDIR /
 EXPOSE 80/tcp 443/tcp
-ENTRYPOINT /usr/bin/go.sh
+ENTRYPOINT ["/usr/bin/go.sh"]
 

@@ -8,8 +8,4 @@ trap "echo TRAPed signal" HUP INT QUIT TERM
 # start service in background here
 php-fpm83
 nginx
-
-echo "[hit enter key to exit] or run 'docker stop <container>'"
-read
-
-echo "exited $0"
+/bin/sh
