@@ -114,6 +114,9 @@ crlDistributionPoints = URI:http://pki.example.com/pki/root_ca.crl
 keyUsage = cRLSign, keyCertSign
 basicConstraints = critical,CA:true
 subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid:always,issuer
+authorityInfoAccess = caIssuers;URI:http://pki.example.com/pki/root_ca.crt
+crlDistributionPoints = URI:http://pki.example.com/pki/root_ca.crl
 
 [ crl_ext ]
 authorityKeyIdentifier=keyid:always

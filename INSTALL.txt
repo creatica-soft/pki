@@ -159,7 +159,7 @@ sudo sed -i s/signing_ca.pem/root_ca.pem/g /etc/ssl/openssl.cnf
 sudo sed -i s/signing_ca.key/root_ca.key/g /etc/ssl/openssl.cnf
 sudo touch /etc/ssl/index.txt
 sudo echo 123456789ABCDEF0123456789ABCDEF0123456789ABCDF |sudo tee /etc/ssl/crlnumber
-sudo openssl ca -gencrl -out /var/www/pki.example.com/root_ca.crl -config /etc/ssl/openssl.cnf -crldays 3650
+sudo openssl ca -gencrl -outform DER -out /var/www/pki.example.com/pki/root_ca.crl -config /etc/ssl/openssl.cnf -crldays 3650
 sudo sed -i s/root_ca.pem/signing_ca.pem/g /etc/ssl/openssl.cnf
 sudo sed -i s/root_ca.key/signing_ca.key/g /etc/ssl/openssl.cnf
 ```

@@ -34,8 +34,7 @@ RUN git clone https://github.com/creatica-soft/pki && \
     sudo sed -i s/signing_ca.key/root_ca.key/g /etc/ssl/openssl.cnf && \
     sudo touch /etc/ssl/index.txt && \
     sudo echo 123456789ABCDEF0123456789ABCDEF0123456789ABCDF |sudo tee /etc/ssl/crlnumber && \
-    sudo mkdir /var/www/pki.example.com/pki && \
-    sudo openssl ca -gencrl -out /var/www/pki.example.com/pki/root_ca.crl -config /etc/ssl/openssl.cnf -crldays 3650 && \
+    sudo openssl ca -gencrl -outform DER -out /var/www/pki.example.com/pki/root_ca.crl -config /etc/ssl/openssl.cnf -crldays 3650 && \
     sudo sed -i s/root_ca.pem/signing_ca.pem/g /etc/ssl/openssl.cnf && \
     sudo sed -i s/root_ca.key/signing_ca.key/g /etc/ssl/openssl.cnf && \
     sudo cp -r acme certificates cmp cmp_client crls est est_client lib mswstep msxcep ocsp domains.txt *.html *.php *.ico /var/www/pki.example.com/ && \
