@@ -255,6 +255,7 @@ sudo service php-fpm83  start
 19. Review /var/www/pki.example.com/*/globals.php, update DNS if necessary for pki.example.com or /etc/hosts file, obtain secret key from https://pki.example.com/key_request.html. If AD is not available, use username test with any password to get the key - only for testing, comment out if $username == "test" line in key_request.php in production! Update subject and secret in [ir] section of openssl.conf file. Create private keys for a user priv.key and for a host test.example.internal.key and run the php8 tests.php from *_client and certbot folders; for example,
 
 ```
+#if testing with fake DNS names in a docker container, add these lines into /etc/hosts
 sudo echo 127.0.0.1      pki.example.com | sudo tee -a /etc/hosts
 sudo echo 127.0.0.1      test.example.com | sudo tee -a /etc/hosts
 
@@ -262,8 +263,6 @@ cd  /var/www/pki.example.com/cmp_client
 sudo php83 tests.php
 
 cd ../certbot
-sed -i "s/username/test/" certbot.conf
-sed -i "s/eab-hmac-key = .*/eab-hmac-key = $KEY/" certbot.conf
 chmod 755 *.sh
 ./tests.sh
 

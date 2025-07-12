@@ -5,7 +5,26 @@ require_once 'sql.php';
 require_once 'certificate.php';
 
 $cert = 'user.p12';
-$base_url = 'https://pki.example.com/.well-known/est';
+$cmp_server = "pki.example.com";
+$base_url = 'https://' . $cmp_server . '/.well-known/est';
+
+$dns_cmp = checkdnsrr($cmp_server, "ANY");
+if (! $dns_cmp) {
+  $cmp_found = false;
+  $hosts = file("/etc/hosts");
+  if ($hosts) {
+    foreach ($hosts as $host) {
+      if (str_contains($host, $cmp_server)) {
+        $cmp_found = true;
+        break;
+      }
+    }
+    if (!$cmp_found) {
+      print "$cmp_server is not found in DNS. If testing, add 127.0.0.1 $cmp_server into /etc/hosts\n";
+      exit(1);
+    }
+  }
+}
 
 $numberOfRuns = 1;
 

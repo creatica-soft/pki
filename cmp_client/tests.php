@@ -5,13 +5,44 @@ require_once 'sql.php';
 require_once 'certificate.php';
 require_once 'base64url.php';
 
-$now = date_create(null, new DateTimeZone("+0000"))->getTimestamp();
+//just for testing - use real name if integrated with AD and comment out if ($username == "test") line here and in ../key_request.php
+//you may use key_request.php or https://pki.example.com/key_request.html to get a key
+//in this case no need to include the $password here, just update openssl.conf file in this dir
+$username = "test"; 
+$password = "123";
+$cmp_server = "pki.example.com";
+$test_server = "test.example.com";
 $openssl_path = "/usr/bin/openssl";
-$username = "test";
 
 if (!is_executable($openssl_path)) {
-  print "File $openssl_path is not found";
+  print "File $openssl_path is not found\n";
   exit(1);
+}
+
+$dns_cmp = checkdnsrr($cmp_server, "ANY");
+$dns_test = checkdnsrr($test_server, "ANY");
+if (! $dns_cmp || ! $dns_test) {
+  $cmp_found = false;
+  $test_found = false;
+  $hosts = file("/etc/hosts");
+  if ($hosts) {
+    foreach ($hosts as $host) {
+      if (str_contains($host, $cmp_server)) {
+        $cmp_found = true;
+        if ($test_found) break;
+        else continue;
+      }
+      else if (str_contains($host, $test_server)) {
+        $test_found = true;
+        if ($cmp_found) break;
+        else continue;
+      }
+    }
+    if (!$cmp_found || !$test_found) {
+      print "$cmp_server or $test_server or both is/are not found in DNS. If testing, add 127.0.0.1 $cmp_server $test_server into /etc/hosts\n";
+      exit(1);
+    }
+  }
 }
 
 if (!is_file('priv.key')) {
@@ -41,17 +72,21 @@ if ($lines) {
   $modified = false;
   foreach ($lines as &$line) {
     if (strncmp($line, 'secret = pass:"get a key"', 24) == 0) {
+      if ($username != "test")
+        auth($username, $password);
       $key = base64url_encode(openssl_random_pseudo_bytes(64));
       sqlSaveKey($username, $key);
       $line = "secret = pass:$key\n";
       $modified = true; 
     } else if (strncmp($line, 'subject = "/CN=username"', 24) == 0) {
-      $line = 'subject = "/CN=test"' . "\n";
+      $line = 'subject = "/CN=' . $username . '"' . "\n";
       $modified = true; 
     }
   }
   if ($modified) file_put_contents("openssl.conf", $lines);
 }
+
+$now = date_create(null, new DateTimeZone("+0000"))->getTimestamp();
 
 $verbosity = 3; //0 = EMERG, 1 = ALERT, 2 = CRIT, 3 = ERR, 4 = WARN, 5 = NOTE, 6 = INFO, 7 = DEBUG, 8 = TRACE. Defaults to 6 = INFO
 $sections = "cmp";

@@ -1,10 +1,30 @@
 #!/bin/ash
 # install certbot and create a virtual host in nginx
+USERNAME=test
+PASSWORD=123
+ACME_SERVER=pki.example.com
 export CERTBOT_DOMAIN=test.example.com
 export REQUESTS_CA_BUNDLE=/etc/ssl/ca_chain.pem
 #sudo apk add certbot
-sed -i "s/username/test/" certbot.conf
-KEY=`php83 ../key_request.php test 123`;
+FOUND=`host $CERTBOT_DOMAIN 2>&1` 
+if [ "$?" != 0 ]; then
+  FOUND=`grep $CERTBOT_DOMAIN /etc/hosts`
+  if [ "${FOUND}" == "" ]; then
+    echo "$CERTBOT_DOMAIN is not found in DNS. For testing purpose add it into /etc/hosts file"
+    exit 1
+  fi
+fi 
+FOUND=`host $ACME_SERVER 2>&1`
+if [ "$?" != 0 ]; then
+  FOUND=`grep $ACME_SERVER /etc/hosts`
+  if [ "${FOUND}" == "" ]; then
+    echo "$ACME_SERVER is not found in DNS. For testing purpose add it into /etc/hosts file"
+    exit 1
+  fi
+fi 
+
+sed -i "s/username/$USERNAME/" certbot.conf
+KEY=`php83 ../key_request.php $USERNAME $PASSWORD`;
 sed -i "s/eab-hmac-key = .*/eab-hmac-key = $KEY/" certbot.conf
 sudo mkdir -p /var/www/${CERTBOT_DOMAIN}/.well-known/acme-challenge
 sudo chown alpine /var/www/${CERTBOT_DOMAIN}/.well-known/acme-challenge
