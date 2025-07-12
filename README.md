@@ -6,6 +6,22 @@ defined in rfc7030, online certificate status protocol (OCSP), rfc6960, Certific
 
 Fro quick tests and deployment Dockerfile is provided.
 
+```
+git clone https://github.com/creatica-soft/pki
+cd pki
+docker build -t alpine-pki .
+docker run -it --net=host --rm alpine-pki
+cd /var/www/pki.example.com/cmp_client
+sudo echo 127.0.0.1 pki.example.com test.example.com | sudo tee -a /etc/hosts
+php83 tests.php
+cd ../est_client
+php83 tests.php
+cd ../certbot
+./tests.sh
+```
+
+For production, /var/pki folder should be place in a docker volume to preserve certificate database across reboots. The same might be done for /var/log, etc.
+
 Openssl version 3 includes RFC4120-compliant CMP client, which has been tested to work with this server.
 Openssl ocsp client has been tested with OCSP server.
 Let's Encrypt Certbot has been tested with ACME server.
