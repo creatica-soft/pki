@@ -2,7 +2,10 @@
 # install certbot and create a virtual host in nginx
 export CERTBOT_DOMAIN=test.example.com
 export REQUESTS_CA_BUNDLE=/etc/ssl/ca_chain.pem
-sudo apk add certbot
+#sudo apk add certbot
+sed -i "s/username/test/" certbot.conf
+KEY=`php83 ../key_request.php test 123`;
+sed -i "s/eab-hmac-key = .*/eab-hmac-key = $KEY/" certbot.conf
 sudo mkdir -p /var/www/${CERTBOT_DOMAIN}/.well-known/acme-challenge
 sudo chown alpine /var/www/${CERTBOT_DOMAIN}/.well-known/acme-challenge
 sudo sh -c "cat <<END>/etc/nginx/http.d/${CERTBOT_DOMAIN}.conf
@@ -14,7 +17,8 @@ server {
         }
 }
 END"
-sudo service nginx reload
+#sudo service nginx reload
+sudo nginx -s reload
 
 # verify certbot.conf file
 # run the tests
@@ -33,4 +37,5 @@ certbot -c certbot.conf unregister -n
 rm -rf accounts archive backups csr keys live renewal renewal-hooks logs
 sudo rm -rf /etc/nginx/http.d/${CERTBOT_DOMAIN}.conf
 sudo rm -rf /var/www/${CERTBOT_DOMAIN}/
-sudo service nginx reload
+#sudo service nginx reload
+sudo nginx -s reload

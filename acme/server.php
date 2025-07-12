@@ -129,11 +129,15 @@ function verifyDnsChallenge($dnsRecord, $keyAuthorization) {
 }
 
 function verifyHttpChallenge($challengeUrl, $keyAuthorization) {
-  global $curl_max_redirections, $log_level;
+  global $curl_max_redirections, $log_level, $curl_ipresolve;
   $curl = curl_init($challengeUrl);
   if ($curl === false) {
     errorLog('verifyHttpChallenge() error: curl_init failed');
     throw new AcmeException('serverInternal', 'Internal Server Error', 500);
+  }
+  if (curl_setopt($curl, CURLOPT_IPRESOLVE, $curl_ipresolve) == false) {
+    errorLog('verifyHttpChallenge() error: curl_setopt CURLOPT_IPRESOLVE returned false');
+    throw new AcmeException('serverInternal', 'Internal Server Error', 500);    
   }
   if (curl_setopt($curl, CURLOPT_RETURNTRANSFER, true) === false) {
     errorLog('verifyHttpChallenge() error: curl_setopt CURLOPT_RETURNTRANSFER returned false');

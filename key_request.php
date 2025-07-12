@@ -28,12 +28,20 @@ function exception_handler($e) {
 
 set_exception_handler('exception_handler');
 
-if (empty($_REQUEST["username"]) || empty($_REQUEST["password"]))
-  acmeError('usage', 'Usage: ' . full_request_uri() . '?username=<username>&password=<password>', 400);
-
-$username = sanitize($_REQUEST["username"]);
-$password = sanitize($_REQUEST["password"]);
-
+if (php_sapi_name() == 'cli') {
+  if ($argc == 3) {
+    $username = $argv[1];
+    $password = $argv[2];
+  } else {
+    echo 'Usage: php83 key_request.php <username> <password>';
+    exit(1);
+  }
+} else {
+  if (empty($_REQUEST["username"]) || empty($_REQUEST["password"]))
+    acmeError('usage', 'Usage: ' . full_request_uri() . '?username=<username>&password=<password>', 400);
+  $username = sanitize($_REQUEST["username"]);
+  $password = sanitize($_REQUEST["password"]);
+}
 //This is for testing only! Comment out "if" line in production
 if ($username != "test")
   auth($username, $password);
@@ -47,8 +55,11 @@ $key = base64url_encode(openssl_random_pseudo_bytes($hmac_key_length));
 sqlSaveKey($username, $key);
 
 // Return the ACME Client the key
-$json = array('status' => 200, 'detail' => array('message' => 'PKI ACME Client External Account Binding key request is successful', 'key' => $key));
-header('Content-type: application/json', true, 200);
-echo json_encode($json);
-
+if (php_sapi_name() == 'cli') {
+  echo $key;
+} else {
+  $json = array('status' => 200, 'detail' => array('message' => 'PKI ACME Client External Account Binding key request is successful', 'key' => $key));
+  header('Content-type: application/json', true, 200);
+  echo json_encode($json);
+}
 ?>

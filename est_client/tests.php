@@ -1,5 +1,5 @@
 <?php
-require_once 'globals.php';
+require_once '../est/globals.php';
 require_once 'helper_functions.php';
 require_once 'sql.php';
 require_once 'certificate.php';
@@ -35,18 +35,34 @@ $keys = ['-newkey rsa:2048',
 
 $serialNumbers = array();
 
+if (!is_file($cert)) {
+  if (is_file("../cmp_client/priv.key") && is_file("../cmp_client/user.pem")) {
+    $command = "openssl pkcs12 -export -in ../cmp_client/user.pem -inkey ../cmp_client/priv.key -out $cert -passout pass:''";
+    $res = exec($command, $output, $result_code);
+    if ($result_code != 0) {
+      print "$command\n";
+      print_r($output);
+      exit(1);
+    }
+    unset($output);
+  } else {
+    print "../cmp_client/priv.key and/or ../cmp_client/user.pem file(s) are missing. Unable to create $cert";
+    exit(1); 
+  }
+}
+
 //generate default dsa params (2048 bits in prime, sha224 digest matching 224 bits in q parameter)
 //dsaparams file is used in "openssl req -newkey dsa:dsaparams ..." command (see above)
 //an attempt to generate dsa key with certain parameters in "openssl req -newkey dsa -pkeyopt ..." command fails with an error fixup_params
 //but works for EC keys
-$res = `openssl3 genpkey -quiet -genparam -algorithm dsa -out dsaparams`;
+$res = `openssl genpkey -quiet -genparam -algorithm dsa -out dsaparams`;
 
 $success = true;
 while($runNumber++ < $numberOfRuns) {
   print "runNumber: $runNumber\n";
 
   if (file_exists("cacerts.pem")) unlink("cacerts.pem");
-  $command = "curl --silent -k $base_url/cacerts | openssl3 base64 -d -A | openssl3 pkcs7 -inform der -print_certs -out cacerts.pem";
+  $command = "curl -4 --silent -k $base_url/cacerts | openssl base64 -d -A | openssl pkcs7 -inform der -print_certs -out cacerts.pem";
   $res = `$command`;
   if (file_exists("cacerts.pem")) {
     $res = openssl_x509_read('file://cacerts.pem');
@@ -59,9 +75,9 @@ while($runNumber++ < $numberOfRuns) {
       foreach ($exts as $ext) {
         foreach($keys as $key) {
           $testNumber++;
-          $command = "openssl3 req -new -subj /CN=$subject $ext $key -keyout $subject.key -nodes -out $subject.req";
+          $command = "openssl req -new -subj /CN=$subject $ext $key -keyout $subject.key -nodes -out $subject.req";
           $res = `$command`;
-          $command = "curl --silent --cacert cacerts.pem --cert-type P12 --cert $cert --data-binary @$subject.req" . ' -H "Content-Type: application/pkcs10"' . " $base_url/simpleenroll | openssl3 base64 -d -A | openssl3 pkcs7 -inform der -print_certs -out $subject.crt";
+          $command = "curl -4 --silent --cacert cacerts.pem --cert-type P12 --cert $cert --data-binary @$subject.req" . ' -H "Content-Type: application/pkcs10"' . " $base_url/simpleenroll | openssl base64 -d -A | openssl pkcs7 -inform der -print_certs -out $subject.crt";
           $res = `$command`;
           if (file_exists("$subject.crt")) {
             $serial = `openssl x509 -in $subject.crt -serial -noout | cut -f2 -d'='`;

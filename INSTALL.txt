@@ -61,7 +61,7 @@ sudo vi /etc/apk/repositories
 http://dl-cdn.alpinelinux.org/alpine/v3.20/community
 
 sudo apk update
-sudo apk add php8 php83-openssl php83-fpm php83-curl php83-soap php83-xml uuidgen nginx git logrotate php83-gmp coreutils nginx-mod-http-headers-more php83-ldap php83-sqlite3 php83-mbstring sqlite openssl3 openssh
+sudo apk add php8 php83-openssl php83-fpm php83-curl php83-soap php83-xml uuidgen nginx git logrotate php83-gmp coreutils nginx-mod-http-headers-more php83-ldap php83-sqlite3 php83-mbstring sqlite openssl3 openssh certbot
 ```
 
 8. Clone this repo as alpine user
@@ -75,13 +75,15 @@ git clone https://github.com/creatica-soft/pki
 10. Create /var/www/pki.example.com folder
 
 ```
-mkdir /var/www/pki/example.com
+sudo mkdir -p /var/www/pki.example.com/pki
 ```
 
-11. Copy acme, certificates, cmp, cmp_client, crls, est, est_client, lib, mswstep, msxcep, ocsp folders and domains.txt, *.html, *.php, *.ico, domains.txt files from pki to /var/www/pki.example.com
+11. Copy acme, certificates, certbot, cmp, cmp_client, crls, est, est_client, lib, mswstep, msxcep, ocsp folders and domains.txt, *.html, *.php, *.ico, domains.txt files from pki to /var/www/pki.example.com
 
 ```
-cp -r acme certificates cmp cmp_client crls est est_client lib mswstep msxcep ocsp domains.txt *.html *.php *.ico domains.txt /var/www/pki.example.com/
+sudo cp -r acme certificates certbot cmp cmp_client crls est est_client lib mswstep msxcep ocsp domains.txt *.html *.php *.ico domains.txt /var/www/pki.example.com/
+sudo chown -R alpine:nobody /var/www/pki.example.com
+sudo chmod 755 certbot/*.sh
 ```
 
 12. Add user "nobody" into mail group for php mail to work.
@@ -100,13 +102,14 @@ sudo openssl x509 -inform PEM -outform DER -in /etc/ssl/root_ca.pem -out /etc/ss
 sudo cp /etc/ssl/root_ca.der /var/www/pki.example.com/pki/root_ca.crt
 ```
 
-13.2 Temporarily set default_bits to 4096 in [req] section in openssl.cnf. Create a subordinate (signing) certificated signed by root CA. It may need to have Digital Signature extension for key usage, so add it in [v3_ca] section of openssl.cnf. It should also have CA Information Access and CRL distribution points extensions in addition to Basic Constraints, Subject Key ID and Authority Key ID. Save its private key in DER format as well and copy der file to /var/www/pki.example.com/pki/signing_ca.crt  for CA Information Access extension to work.
+13.2 Temporarily set default_bits to 4096 in [req] section in openssl.cnf. Create a subordinate (signing) certificated signed by root CA. It may need to have Digital Signature extension for key usage, so add it in [v3_ca] section of openssl.cnf. It should also have CA Information Access and CRL distribution points extensions in addition to Basic Constraints, Subject Key ID and Authority Key ID. Save its private key in DER format as well and copy der file to /var/www/pki.example.com/pki/signing_ca.crt  for CA Information Access extension to work. Concatenate signing CA certificate with root CA certificate into ca_chain.pem for certbot tests.
 
 ```
 sudo sed -i s/2048/4096/ /etc/ssl/openssl.cnf
 sudo openssl req -CA /etc/ssl/root_ca.pem -CAkey /etc/ssl/private/root_ca.key -subj /CN=InternalSigningCA -extensions v3_ca_sub -config /etc/ssl/openssl.cnf -days 3650 -out /etc/ssl/signing_ca.pem -keyout /etc/ssl/private/signing_ca.key -noenc
 sudo openssl x509 -inform PEM -outform DER -in /etc/ssl/signing_ca.pem -out /etc/ssl/signing_ca.der
 sudo cp /etc/ssl/signing_ca.der /var/www/pki.example.com/pki/signing_ca.crt
+sudo cat /etc/ssl/signing_ca.pem /etc/ssl/root_ca.pem | sudo tee /etc/ssl/ca_chain.pem
 ```
 
 13.3 Set default_bits back to 2048 in [req] section in openssl.cnf. Create an SSL certificate for nginx server, signed by InternalSigningCA. Save it in DER format as well to save it into certs.db once certs.db is created for nginx SSL stapling to work. Add /etc/ssl/signing_ca.pem certificate to pki.example.com.pem to complete the certificate chain. Only root CA is trusted. If nginx server fails to provide intermediate certificate in addition to its own, its own certificate won't validate!
@@ -235,6 +238,7 @@ sudo sqlite3 /var/pki/acme.db \
   'create index validated_idx on challenges(validated);'
 
 sudo chown -R nobody:alpine /var/pki # for nginx access
+sudo chmod 664 /var/pki/*.db
 
 sudo -u nobody php83 save_cert.php /etc/ssl/pki.example.com.der # for nginx SSL stapling to work
 
@@ -248,14 +252,23 @@ sudo service nginx start
 sudo service php-fpm83  start
 ```
 
-19. Review /var/www/pki.example.com/*/globals.php, update DNS if necessary for pki.example.com or /etc/hosts file, obtain secret key from https://pki.example.com/key_request.html. If AD is not available, use username test with any password to get the key - only for testing, comment out if $username == "test" line in key_request.php in production! Update subject and secret in [ir] section of openssl.conf file. Create private keys for a user priv.key and for a host test.example.internal.key and run the php8 tests.php from *_client folders; for example,
+19. Review /var/www/pki.example.com/*/globals.php, update DNS if necessary for pki.example.com or /etc/hosts file, obtain secret key from https://pki.example.com/key_request.html. If AD is not available, use username test with any password to get the key - only for testing, comment out if $username == "test" line in key_request.php in production! Update subject and secret in [ir] section of openssl.conf file. Create private keys for a user priv.key and for a host test.example.internal.key and run the php8 tests.php from *_client and certbot folders; for example,
 
 ```
+sudo echo 127.0.0.1      pki.example.com | sudo tee -a /etc/hosts
+sudo echo 127.0.0.1      test.example.com | sudo tee -a /etc/hosts
+
 cd  /var/www/pki.example.com/cmp_client
-openssl genrsa -out priv.key 2048
-openssl genrsa -out test.example.internal.key 2048
-vi openssl.conf # update the secret in [ir] section
 sudo php83 tests.php
+
+cd ../certbot
+sed -i "s/username/test/" certbot.conf
+sed -i "s/eab-hmac-key = .*/eab-hmac-key = $KEY/" certbot.conf
+chmod 755 *.sh
+./tests.sh
+
+cd ../est_client
+php83 tests.php
 ```
 
 20. Configure certificate database backup (/var/pki/certs.db) and sync with stand-by instance once it is setup similar to production one. ACL for tcp port 22 is required to be open.

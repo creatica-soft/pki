@@ -1,6 +1,6 @@
 <?php
 require_once "config.php";
-$log_level = LOG_ERR; //options are LOG_ERROR, LOG_INFO and LOG_DEBUG
+$log_level = LOG_ERR; //options are LOG_ERR, LOG_INFO and LOG_DEBUG
 $acme = 1; //ACME protocol version (1 (v2): RFC8555)
 $path = '/acme';
 $directory = "$path/";
@@ -30,6 +30,7 @@ $token_length_bytes = 16; //Challenge class token
 $order_expires_days = 7;
 $nonce_expires_sec = 3600;
 $curl_max_redirections = 10; //maximum redirections when validating http-01 challenge
+$curl_ipresolve = CURL_IPRESOLVE_V4; // or CURL_IPRESOLVE_V6
 $hmac_key_length = 64; //should be provided to a client in base64url_encoded() form
 $acme_db = '/var/pki/acme.db'; //ACME tables are kept in a separate sqlite3 db
 /* 

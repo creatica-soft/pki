@@ -4,6 +4,8 @@ This is a PHP implementation of a server-side certificate management protocol (C
 automatic certificate management environment (ACME), rfc8555, Certificate Enrollment over Secure Transport (EST)
 defined in rfc7030, online certificate status protocol (OCSP), rfc6960, Certificate Store Access via HTTP, rfc4387, MS-XCEP (https://winprotocoldoc.blob.core.windows.net/productionwindowsarchives/MS-XCEP/%5bMS-XCEP%5d.pdf) and MS-WSTEP (https://winprotocoldoc.blob.core.windows.net/productionwindowsarchives/MS-WSTEP/%5bMS-WSTEP%5d.pdf).
 
+Fro quick tests and deployment Dockerfile is provided.
+
 Openssl version 3 includes RFC4120-compliant CMP client, which has been tested to work with this server.
 Openssl ocsp client has been tested with OCSP server.
 Let's Encrypt Certbot has been tested with ACME server.

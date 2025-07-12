@@ -3,9 +3,55 @@ require_once 'globals.php';
 require_once 'helper_functions.php';
 require_once 'sql.php';
 require_once 'certificate.php';
+require_once 'base64url.php';
 
 $now = date_create(null, new DateTimeZone("+0000"))->getTimestamp();
 $openssl_path = "/usr/bin/openssl";
+$username = "test";
+
+if (!is_executable($openssl_path)) {
+  print "File $openssl_path is not found";
+  exit(1);
+}
+
+if (!is_file('priv.key')) {
+  $command = "$openssl_path genrsa -out priv.key 2048 2>&1";
+  $res = exec($command, $output, $result_code);
+  if ($result_code != 0) {
+    print "$command\n";
+    print_r($output);
+    exit(1);
+  }
+  unset($output);
+}
+
+if (!is_file('test.example.internal.key')) {
+  $command = "$openssl_path genrsa -out test.example.internal.key 2048 2>&1";
+  $res = exec($command, $output, $result_code);
+  if ($result_code != 0) {
+    print "$command\n";
+    print_r($output);
+    exit(1);
+  }
+  unset($output);
+}
+
+$lines = file('openssl.conf');
+if ($lines) {
+  $modified = false;
+  foreach ($lines as &$line) {
+    if (strncmp($line, 'secret = pass:"get a key"', 24) == 0) {
+      $key = base64url_encode(openssl_random_pseudo_bytes(64));
+      sqlSaveKey($username, $key);
+      $line = "secret = pass:$key\n";
+      $modified = true; 
+    } else if (strncmp($line, 'subject = "/CN=username"', 24) == 0) {
+      $line = 'subject = "/CN=test"' . "\n";
+      $modified = true; 
+    }
+  }
+  if ($modified) file_put_contents("openssl.conf", $lines);
+}
 
 $verbosity = 3; //0 = EMERG, 1 = ALERT, 2 = CRIT, 3 = ERR, 4 = WARN, 5 = NOTE, 6 = INFO, 7 = DEBUG, 8 = TRACE. Defaults to 6 = INFO
 $sections = "cmp";
