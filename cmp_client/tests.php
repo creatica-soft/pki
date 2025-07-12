@@ -30,12 +30,10 @@ if (! $dns_cmp || ! $dns_test) {
       if (str_contains($host, $cmp_server)) {
         $cmp_found = true;
         if ($test_found) break;
-        else continue;
       }
-      else if (str_contains($host, $test_server)) {
+      if (str_contains($host, $test_server)) {
         $test_found = true;
         if ($cmp_found) break;
-        else continue;
       }
     }
     if (!$cmp_found || !$test_found) {

@@ -6,6 +6,6 @@
 trap "echo TRAPed signal" HUP INT QUIT TERM
 
 # start service in background here
-php-fpm83
-nginx
+sudo php-fpm83
+sudo nginx
 /bin/sh

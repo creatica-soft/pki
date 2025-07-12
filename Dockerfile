@@ -2,7 +2,7 @@ FROM arm64v8/alpine:3.22
 ARG TZ="Australia/Brisbane"
 RUN cat /etc/alpine-release
 COPY etc/apk/repositories /etc/apk/
-RUN apk update && apk upgrade && apk add tzdata alpine-conf php83 php83-openssl php83-fpm php83-curl php83-soap php83-xml uuidgen nginx git logrotate php83-gmp coreutils nginx-mod-http-headers-more php83-ldap php83-sqlite3 php83-mbstring sqlite openssl3 sudo certbot
+RUN apk update && apk upgrade && apk add tzdata alpine-conf php83 php83-openssl php83-fpm php83-curl php83-soap php83-xml uuidgen nginx git logrotate php83-gmp coreutils nginx-mod-http-headers-more php83-ldap php83-sqlite3 php83-mbstring sqlite openssl3 sudo certbot curl
 COPY etc/sudoers /etc/
 RUN setup-timezone $TZ && \
     addgroup alpine && \
@@ -87,8 +87,6 @@ RUN git clone https://github.com/creatica-soft/pki && \
     sudo chmod 664 /var/pki/*.db && \
     cd /var/www/pki.example.com && \
     sudo -u nobody php83 save_cert.php /etc/ssl/pki.example.com.der
-USER root
-WORKDIR /
 EXPOSE 80/tcp 443/tcp
 ENTRYPOINT ["/usr/bin/go.sh"]
 

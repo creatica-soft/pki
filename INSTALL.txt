@@ -61,7 +61,7 @@ sudo vi /etc/apk/repositories
 http://dl-cdn.alpinelinux.org/alpine/v3.20/community
 
 sudo apk update
-sudo apk add php8 php83-openssl php83-fpm php83-curl php83-soap php83-xml uuidgen nginx git logrotate php83-gmp coreutils nginx-mod-http-headers-more php83-ldap php83-sqlite3 php83-mbstring sqlite openssl3 openssh certbot
+sudo apk add php8 php83-openssl php83-fpm php83-curl php83-soap php83-xml uuidgen nginx git logrotate php83-gmp coreutils nginx-mod-http-headers-more php83-ldap php83-sqlite3 php83-mbstring sqlite openssl3 openssh certbot curl
 ```
 
 8. Clone this repo as alpine user
