@@ -10,7 +10,7 @@ Fro quick tests and deployment Dockerfile is provided.
 git clone https://github.com/creatica-soft/pki
 cd pki
 docker build -t alpine-pki .
-docker run -it --net=host --rm alpine-pki
+docker run -it --net=host alpine-pki
 cd /var/www/pki.example.com/cmp_client
 sudo echo 127.0.0.1 pki.example.com test.example.com | sudo tee -a /etc/hosts
 php83 tests.php
@@ -20,7 +20,13 @@ cd ../certbot
 ./tests.sh
 ```
 
-For production, /var/pki folder should be place in a docker volume to preserve certificate database across reboots. The same might be done for /var/log, etc.
+For production, /var/pki folder should probably be place in a docker persistent volume to preserve certificate database in case a new container runs. The same might be done for /var/log, etc. To preserve data in the current container if it stopped, simply start it with
+
+```
+docker contrainer start -i alpine-pki 
+```
+
+This is still error-prone if alpine-pki container is deleted by accident.
 
 Openssl version 3 includes RFC4120-compliant CMP client, which has been tested to work with this server.
 Openssl ocsp client has been tested with OCSP server.
