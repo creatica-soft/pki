@@ -2,8 +2,8 @@
 # install certbot and create a virtual host in nginx
 USERNAME=test
 PASSWORD=123
-ACME_SERVER=pki.example.com
-export CERTBOT_DOMAIN=test.example.com
+ACME_SERVER=$PKI_DNS
+export CERTBOT_DOMAIN=$TEST_DNS
 export REQUESTS_CA_BUNDLE=/etc/ssl/ca_chain.pem
 #sudo apk add certbot
 FOUND=`host $CERTBOT_DOMAIN 2>&1` 
@@ -24,7 +24,7 @@ if [ "$?" != 0 ]; then
 fi 
 
 sed -i "s/username/$USERNAME/" certbot.conf
-KEY=`php83 ../key_request.php $USERNAME $PASSWORD`;
+KEY=`php$PHP_VER ../key_request.php $USERNAME $PASSWORD`;
 sed -i "s/eab-hmac-key = .*/eab-hmac-key = $KEY/" certbot.conf
 sudo mkdir -p /var/www/${CERTBOT_DOMAIN}/.well-known/acme-challenge
 sudo chown alpine /var/www/${CERTBOT_DOMAIN}/.well-known/acme-challenge

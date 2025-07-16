@@ -1,2 +1,4 @@
 # allowed domain suffixes
 example.internal
+$PKI_DNS
+$TEST_DNS

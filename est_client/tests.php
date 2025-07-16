@@ -5,7 +5,7 @@ require_once 'sql.php';
 require_once 'certificate.php';
 
 $cert = 'user.p12';
-$cmp_server = "pki.example.com";
+$cmp_server = "$PKI_DNS";
 $base_url = 'https://' . $cmp_server . '/.well-known/est';
 
 $dns_cmp = checkdnsrr($cmp_server, "ANY");

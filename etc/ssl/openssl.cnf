@@ -95,8 +95,8 @@ extendedKeyUsage = serverAuth,clientAuth
 basicConstraints=CA:FALSE
 subjectKeyIdentifier=hash
 authorityKeyIdentifier=keyid:always,issuer
-authorityInfoAccess = caIssuers;URI:http://pki.example.com/pki/signing_ca.crt
-crlDistributionPoints = URI:http://pki.example.com/pki/signing_ca.crl
+authorityInfoAccess = caIssuers;URI:http://$PKI_DNS/pki/signing_ca.crt
+crlDistributionPoints = URI:http://$PKI_DNS/pki/signing_ca.crl
 
 [ v3_req ]
 basicConstraints = CA:FALSE
@@ -107,16 +107,16 @@ keyUsage = digitalSignature, cRLSign, keyCertSign
 basicConstraints = critical,CA:true
 subjectKeyIdentifier=hash
 authorityKeyIdentifier=keyid:always,issuer
-authorityInfoAccess = caIssuers;URI:http://pki.example.com/pki/root_ca.crt
-crlDistributionPoints = URI:http://pki.example.com/pki/root_ca.crl
+authorityInfoAccess = caIssuers;URI:http://$PKI_DNS/pki/root_ca.crt
+crlDistributionPoints = URI:http://$PKI_DNS/pki/root_ca.crl
 
 [ v3_ca_root ]
 keyUsage = cRLSign, keyCertSign
 basicConstraints = critical,CA:true
 subjectKeyIdentifier=hash
 authorityKeyIdentifier=keyid:always,issuer
-authorityInfoAccess = caIssuers;URI:http://pki.example.com/pki/root_ca.crt
-crlDistributionPoints = URI:http://pki.example.com/pki/root_ca.crl
+authorityInfoAccess = caIssuers;URI:http://$PKI_DNS/pki/root_ca.crt
+crlDistributionPoints = URI:http://$PKI_DNS/pki/root_ca.crl
 
 [ crl_ext ]
 authorityKeyIdentifier=keyid:always

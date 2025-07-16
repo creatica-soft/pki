@@ -10,8 +10,8 @@ require_once 'base64url.php';
 //in this case no need to include the $password here, just update openssl.conf file in this dir
 $username = "test"; 
 $password = "123";
-$cmp_server = "pki.example.com";
-$test_server = "test.example.com";
+$cmp_server = "$PKI_DNS";
+$test_server = "$TEST_DNS";
 $openssl_path = "/usr/bin/openssl";
 
 if (!is_executable($openssl_path)) {
@@ -19,8 +19,8 @@ if (!is_executable($openssl_path)) {
   exit(1);
 }
 
-$dns_cmp = checkdnsrr($cmp_server, "ANY");
-$dns_test = checkdnsrr($test_server, "ANY");
+$dns_cmp = checkdnsrr($cmp_server, "A");
+$dns_test = checkdnsrr($test_server, "A");
 if (! $dns_cmp || ! $dns_test) {
   $cmp_found = false;
   $test_found = false;
@@ -103,12 +103,12 @@ $options = ['',
             '-sans 10.2.3.4', 
             '-sans test.example.internal,10.2.3.4', 
             '-sans test.example.internal,test2.example.internal,10.2.3.4', 
-            '-sans test.example.com',
+            "-sans $TEST_DNS",
             '-sans 192.168.1.1',
             '-sans test.example.internal.com,192.168.1.1'];
 $options2 = "-crl_download -crl_check_all -untrusted $signing_ca_path -trusted $root_ca_path";
 $command2 = "$openssl_path verify $options2 test.example.internal.crt 2>&1";
-$options3 = "-url http://pki.example.com/ocsp/ -issuer $signing_ca_path";
+$options3 = "-url http://$PKI_DNS/ocsp/ -issuer $signing_ca_path";
 $command3 = "$openssl_path ocsp $options3 -cert test.example.internal.crt 2>&1";
 
 $serialNumbers = array();
