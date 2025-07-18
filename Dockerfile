@@ -29,7 +29,6 @@ RUN  --mount=type=secret,id=ldap,env=LDAP_PASSWORD --mount=type=secret,id=pg,env
     adduser -G nobody -D alpine && \
     sed -i -e '/^alpine/s/!/*/' /etc/shadow && \
     adduser nobody mail && \
-    sed -i "s/error_log .*/error_log stderr;/" /etc/nginx/nginx.conf && \
     cd /tmp && \
     envsubst '$SMTP_DNS $PKI_DNS $PHP_VER' < etc/php$PHP_VER/php.ini | tee /etc/php$PHP_VER/php.ini && \
     envsubst '$FPM_DNS' < etc/php$PHP_VER/php-fpm.d/www.conf | tee /etc/php$PHP_VER/php-fpm.d/www.conf && \
