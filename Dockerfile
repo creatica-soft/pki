@@ -79,8 +79,8 @@ RUN  --mount=type=secret,id=ldap,env=LDAP_PASSWORD --mount=type=secret,id=pg,env
     sqlite3 --init /var/www/$PKI_DNS/init-certs.sql $DB_DIR/sqlite/certs.db && \
     sqlite3 --init /var/www/$PKI_DNS/init-acme.sql $DB_DIR/sqlite/acme.db && \
     chown -R nobody:nobody $DB_DIR/sqlite && \
-    chmod 775 $DB_DIR/sqlite && \
-    chmod 664 $DB_DIR/sqlite/*.db && \
+    chmod 770 $DB_DIR/sqlite && \
+    chmod 660 $DB_DIR/sqlite/*.db && \
     chown postgres:postgres $DB_DIR/pg && \
     chmod 750 $DB_DIR/pg && \
     mkdir /run/postgresql && \
@@ -90,12 +90,8 @@ RUN  --mount=type=secret,id=ldap,env=LDAP_PASSWORD --mount=type=secret,id=pg,env
     sudo -u postgres psql -c "ALTER USER postgres WITH ENCRYPTED PASSWORD '$PG_PASSWORD';" && \
     psql -f /var/www/$PKI_DNS/createdb.sql postgres postgres && \
     cd /var/www/$PKI_DNS && \
-    echo $LDAP_PASSWORD | tee /tmp/ldap_password && \
-    echo $PG_PASSWORD |tee /tmp/pg_password && \
     export LDAP_ENC_PASSWORD=$(php$PHP_VER encrypt_pass.php $LDAP_PASSWORD) && \
     export PG_ENC_PASSWORD=$(php$PHP_VER encrypt_pass.php $PG_PASSWORD) && \
-    echo $LDAP_ENC_PASSWORD | tee /tmp/enc_ldap && \
-    echo $PG_ENC_PASSWORD | tee /tmp/enc_pg && \
     envsubst '$PKI_DNS $LDAP_DNS $LDAP_DNS2 $LDAP_BINDING_DN $OU_USERS $OU_SERVICE_ACCOUNTS $DB $DB_DIR $PG_DNS $SSL_MODE $SSL_ROOT_CERT $LDAP_ENC_PASSWORD $PG_ENC_PASSWORD' < lib/config.php | tee lib/config.php && \
     php$PHP_VER save_cert.php /etc/ssl/$PKI_DNS.der && \
     sudo -u postgres pg_ctl stop -D $DB_DIR/pg
