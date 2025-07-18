@@ -9,13 +9,18 @@ Fro quick tests and deployment Dockerfile is provided.
 ```
 git clone https://github.com/creatica-soft/pki
 cd pki
-docker build -t alpine-pki .
-docker run -it --net=host alpine-pki
-cd /var/www/pki.example.com/cmp_client
-sudo echo 127.0.0.1 pki.example.com test.example.com | sudo tee -a /etc/hosts
-php83 tests.php
+# review ARGs in Dockerfile and update as needed
+export LDAP_PASSWORD=<ldap_service_account_password>
+export PG_PASSWORD=<postgres_password>
+docker build -t alpine-pki --rm --secret id=ldap,env=LDAP_PASSWORD --secret id=pg,env=PG_PASSWORD .
+unset LDAP_PASSWORD PG_PASSWORD
+# use same $PKI_DNS and $TEST_DNS as in Dockerfile
+docker run -it --net=host --name $PKI_DNS alpine-pki
+cd /var/www/$PKI_DNS/cmp_client
+sudo echo 127.0.0.1 $PKI_DNS $TEST_DNS | sudo tee -a /etc/hosts
+php84 tests.php
 cd ../est_client
-php83 tests.php
+php84 tests.php
 cd ../certbot
 ./tests.sh
 ```
@@ -25,8 +30,6 @@ For production, /var/pki folder should probably be place in a docker persistent 
 ```
 docker contrainer start -i alpine-pki 
 ```
-
-This is still error-prone if alpine-pki container is deleted by accident.
 
 Openssl version 3 includes RFC4120-compliant CMP client, which has been tested to work with this server.
 Openssl ocsp client has been tested with OCSP server.
@@ -69,7 +72,7 @@ default = default_sect
 [default_sect]
 
 [cmp]
-server = pki.example.com:443 #test server's IP is 10.161.124.30 to put into your hosts file
+server = pki.example.org:443 #test server's IP is 10.161.124.30 to put into your hosts file
 path = cmp/
 tls_used = 1
 implicit_confirm = 0 # set to 0 for explicit certificate confirmations or 1 - for no certconf messages
@@ -143,7 +146,7 @@ subjectAltName = DNS:test.example.internal,DNS:test2.example.internal,IP:10.2.3.
 keyUsage = digitalSignature
 ```
 
-3. Obtain a client certificate, signing cert and root CA at https://pki.example.com/cmp/cert_request.html. Alternatively, get a shared secret from https://pki.example.com/key_request.html, update openssl.conf [ir] section and get the client cert using
+3. Obtain a client certificate, signing cert and root CA at https://pki.example.org/cmp/cert_request.html. Alternatively, get a shared secret from https://pki.example.com/key_request.html, update openssl.conf [ir] section and get the client cert using
 
 ```
 openssl cmp -config openssl.conf -section cmp,ir -verbosity 8
@@ -201,79 +204,12 @@ openssl cmp -config openssl.conf -section cmp,cr -csr filename.csr -verbosity 8
 
 ```
 openssl verify -x509_strict -crl_check_all -crl_download -untrusted signing.ca.pem -trusted root.ca.pem test.example.internal.crt
-openssl ocsp -url http://pki.example.com/ocsp/ -issuer signing_ca.pem -cert test.example.internal.crt
+openssl ocsp -url http://pki.example.org/ocsp/ -issuer signing_ca.pem -cert test.example.internal.crt
 ```
 
-### Certificate database
+### Certificate databases
 
-Certificates are stored in sqlite3 db. The schema is very simple. It consists of three tables with some indexes:
-
-```
-sudo sqlite3 /var/pki/certs.db \
-  'create table certs(serial TEXT PRIMARY KEY ASC, status INTEGER, revocationReason INTEGER, revocationDate INTEGER, notBefore INTEGER, notAfter INTEGER, subject TEXT, owner TEXT, role TEXT, cert BLOB, cn TEXT, fingerprint TEXT, sHash TEXT, iAndSHash TEXT, sKIDHash TEXT);' \
-  'CREATE INDEX subj_idx on certs(subject); CREATE INDEX status_idx on certs(status); CREATE INDEX from_idx on certs(notBefore);' \
-  'CREATE INDEX to_idx on certs(notAfter); CREATE INDEX owner_idx on certs(owner); CREATE INDEX role_idx on certs(role);' \
-  'CREATE INDEX cn_idx on certs(cn); CREATE INDEX fingerprint_idx on certs(fingerprint); CREATE INDEX sHash_idx on certs(sHash);' \
-  'CREATE INDEX iAndSHash_idx on certs(iAndSHash); CREATE INDEX sKIDHash_idx on certs(sKIDHash);'
-
-sudo sqlite3 /var/pki/certs.db \
-  'create table cert_req_ids(serial TEXT PRIMARY KEY ASC, certReqId TEXT, timestamp INTEGER, nonce TEXT, transactionID TEXT);' \
-  'CREATE INDEX certReqId_idx on cert_req_ids(certReqId); CREATE INDEX transactionID_idx on cert_req_ids(transactionID);'
-
-//kid is AD username, key is base64url_encoded shared key bytes, used for auth in CMP IR and ACME
-sudo sqlite3 /var/pki/certs.db \
-  'create table keys(kid TEXT PRIMARY KEY ASC, key TEXT);'
-```
-
-cert_req_ids table has unconfirmed cert_req_ids; once confirmed (or denied) in CERTCONF message or unconfirmed within 
-$confirm_wait_time_sec, the cert status should be updated in certs table from 2 (on-hold) to either 0 (valid) or revoked (-1) and the record 
-in cert_req_ids should be deleted
-
-### ACME database
-
-```
-sudo sqlite3 /var/pki/acme.db \
-  'create table nonces(nonce TEXT PRIMARY KEY ASC, ip TEXT, expires INTEGER);' \
-  'create index ip_idx on nonces(ip);' \
-  'create index expires_idx on nonces(expires);'
-
-//uri for an account should look like /acme/accounts/<accountID>
-sudo sqlite3 /var/pki/acme.db \
-  'create table accounts(id TEXT PRIMARY KEY ASC, status INTEGER, termsOfServiceAgreed INTEGER, jwk_hash TEXT, kid TEXT, jwk BLOB, contacts BLOB, externalAccountBinding BLOB);' \
-  'create index jwk_hash_idx on accounts(jwk_hash);' \
-  'create index account_status_idx on accounts(status);' \
-  'create index account_kid_idx on accounts(kid);'
-
-//uri for an order should look like /acme/accounts/<accountID>/orders/<orderID>
-sudo sqlite3 /var/pki/acme.db \
-  'PRAGMA foreign_keys = ON;' \
-  'create table orders(id TEXT PRIMARY KEY ASC, status INTEGER, expires INTEGER, identifiers BLOB, notBefore INTEGER, notAfter INTEGER, certSerial TEXT, account TEXT, foreign key(account) references accounts(id) ON DELETE CASCADE);' \
-  'create index order_status_idx on orders(status);' \
-  'create index order_expires_idx on orders(expires);' \
-  'create index notBefore_idx on orders(notBefore);' \
-  'create index notAfter_idx on orders(notAfter);'
-
-//uri for authorizations should look like /acme/accounts/<accountID>/orders/<orderID>/authorizations/<authorizationID>
-sudo sqlite3 /var/pki/acme.db \
-  'PRAGMA foreign_keys = ON;' \
-  'create table authorizations(id TEXT PRIMARY KEY ASC, identifier BLOB, status INTEGER, expires INTEGER, wildcard INTEGER, "order" TEXT, foreign key("order") references orders(id) ON DELETE CASCADE);' \
-  'create index authorization_status_idx on authorizations(status);' \
-  'create index authorization_expires_idx on authorizations(expires);'
-
-//uri for challenges should look like /acme/accounts/<accountID>/orders/<orderID>/authorizations/<authorizationID>/challenges/<challengeID>
-sudo sqlite3 /var/pki/acme.db \
-  'PRAGMA foreign_keys = ON;' \
-  'create table challenges(id TEXT PRIMARY KEY ASC, type TEXT, url TEXT, status INTEGER, token TEXT, error TEXT, validated INTEGER, authorization TEXT, foreign key(authorization) references authorizations(id) ON DELETE CASCADE);' \
-  'create index type_idx on challenges(type);' \
-  'create index challenge_status_idx on challenges(status);' \
-  'create index token_idx on challenges(token);' \
-  'create index validated_idx on challenges(validated);'
-
-nonces table is used for ACME nonces, ip is the acme client's IP address; once the nonce is used, it's removed from the table
-```
-
-There is a plan to upgrade it to postgres cluster to be able to use anycast technology, 
-which would not only make PKI servers load-balanced and redundant but also closer to end users.
+Certificates are stored in sqlite3 or postgres db depending on ARG DB in Dockerfile. See init-cert.sql and init-acme.sql for sqlite3 schema and createdb.sql for postgres schema.
 
 ### Common PHP library
 
@@ -381,8 +317,8 @@ openssl provides ocsp client, which can be used to verify that OCSP server works
 Well-known URLs are provided for certificates and CRLs:
 
 ```
-https://pki.example.com/certificates/search.cgi?attirbute=value
-https://pki.example.com/crls/search.cgi?attirbute=value
+https://pki.example.org/certificates/search.cgi?attirbute=value
+https://pki.example.org/crls/search.cgi?attirbute=value
 ```
 
 where all x.509 attributes are supported: certHash, uri, iHash, iAndSHash, name, cn, sHash, sKIDHash.
