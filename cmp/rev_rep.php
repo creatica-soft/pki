@@ -166,6 +166,3 @@ class RevRepContent {
     $this->crls = null;
   }
 }
-
-
-?>

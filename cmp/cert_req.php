@@ -75,5 +75,3 @@ class CertReq {
     if (! is_null($req)) $this->map($req);
   }
 }
-
-?>

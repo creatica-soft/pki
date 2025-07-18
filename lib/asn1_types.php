@@ -42,5 +42,3 @@ const DATE_TIME         = 33;
 const DURATION          = 34;
 const OID_IRI           = 35;
 const RELATIVE_OID_IRI  = 36;
-
-?>

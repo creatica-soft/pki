@@ -64,5 +64,3 @@ class ExtraCerts {
     $this->encoded = false;
   }
 }
-
-?>

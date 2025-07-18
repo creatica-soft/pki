@@ -274,5 +274,3 @@ class OCSPRequest {
     $this->signature = null;
   }
 }
-
-?>

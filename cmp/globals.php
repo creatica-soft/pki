@@ -29,4 +29,3 @@ $ca_protocol_enc_cert = '';
 $default_pki_message_protection_alg = 'sha256WithRSAEncryption';
 $include_root_ca_cert_in_capubs = false;
 
-?>

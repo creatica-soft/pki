@@ -71,4 +71,3 @@
    | userActionRequired      | Visit the "instance" URL and take       |
    |                         | actions specified there                 |
 */
-?>

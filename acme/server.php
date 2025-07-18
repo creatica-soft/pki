@@ -946,5 +946,3 @@ switch($_SERVER['REQUEST_METHOD']) {
     errorLog("acme-server.php error: unrecognized http request method " . $_SERVER['REQUEST_METHOD']);
     throw new AcmeException('malformed', 'unknown http request method', 400);        
 }
-
-?>

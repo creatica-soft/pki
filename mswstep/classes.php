@@ -211,4 +211,3 @@ class RequestSecurityTokenService {
       throw new Exception('wrong request type: must be RequestSecurityTokenType');
   }  
 }
-?>

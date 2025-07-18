@@ -104,5 +104,3 @@ class Authorization implements JsonSerializable {
     }
   }
 }
-
-?>

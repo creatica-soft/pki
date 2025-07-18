@@ -36,11 +36,11 @@ function headers($statusCode, $len) {
 
 function errorMsg($statusStrings, $errorCode = 0) {
   global $pkiFailInfo, $signing_ca_der_path, $include_signing_ca_cert_in_extra_certs;
-  $strings = '';
-  $n = count($statusStrings);
-  for ($i = 0; $i < $n - 1; $i++)
-    $strings .= $statusStrings[$i] . "\n";
-  $strings .= $statusStrings[$n - 1];  
+  //$strings = '';
+  //$n = count($statusStrings);
+  //for ($i = 0; $i < $n - 1; $i++)
+  //  $strings .= $statusStrings[$i] . "\n";
+  //$strings .= $statusStrings[$n - 1];  
   $response = new PKIMessage();
   if (is_null($response->header))
     $response->setHeader();
@@ -63,6 +63,12 @@ function exception_handler($e) {
   errorLog($e);
   errorMsg(array("Internal PKI CMP Server: " . $e->getMessage()), $e->getCode());
 }
+
+// Convert errors to exceptions
+//set_error_handler(function ($severity, $message, $file, $line) {
+//    error_log("PHP Error: $message in $file on line $line");
+//    throw new ErrorException($message, 0, $severity, $file, $line);
+//});
 
 set_exception_handler('exception_handler');
 
@@ -119,8 +125,8 @@ if ($request->header->protectionAlg->algorithm != str2oid('password based MAC'))
     errorLog("cmp server.php: PKI message protection has been validated\n", 'info');
 } else { //password-based MAC - need to find the shared secret corresponding to $this->header->sender
   $username = $request->header->sender->getCN();
-  if (in_array($username, $master_users)) $role = 'master';
   if (! $username) throw new Exception("cmp server.php: sender is missing a CN attribute - please use '/CN=username' in the subject");  
+  if (in_array($username, $master_users)) $role = 'master';
   $key = sqlGetKey($username);
   if (! $key) throw new Exception("cmp server.php: a shared secret for $username is not found");
   $request->validateProtection($secret = $key);
@@ -216,5 +222,3 @@ if ($log_level == LOG_DEBUG || $log_level == LOG_INFO)
 echo $encoded;
 if ($log_level == LOG_DEBUG || $log_level == LOG_INFO)
   errorLog("cmp server.php: the PKI response has been sent\n", 'info');
-
-?>

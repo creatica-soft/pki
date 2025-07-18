@@ -157,5 +157,3 @@ class PKIProtection {
     $this->value = null;
   }
 }
-
-?>

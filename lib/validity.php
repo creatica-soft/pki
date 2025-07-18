@@ -120,5 +120,3 @@ class Validity {
     $this->notBefore = null;
   }
 }
-
-?>

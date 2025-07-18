@@ -482,5 +482,3 @@ class PKIHeader {
     $this->generalInfo = null;
   }
 }
-
-?>

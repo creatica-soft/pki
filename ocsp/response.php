@@ -264,4 +264,3 @@ class OCSPResponse {
     $this->responseBytes = null;
   }
 }
-?>

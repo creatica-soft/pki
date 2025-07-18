@@ -5,7 +5,7 @@ require_once 'sql.php';
 require_once 'certificate.php';
 
 if ($argc < 2) {
-  print "save_cert.php will save a certificate issued by the Signing CA into sqllit3 certs.db\n";
+  print "save_cert.php will save a certificate issued by the Signing CA into a database\n";
   print "Usage: php8 save_cert.php <certfile.der>\n";
   exit(1);
 }
@@ -54,10 +54,8 @@ switch($res) {
 $res = sqlSaveCert($serial, $status, $cert->tbsCertificate->subject, $notBefore, $notAfter, $owner, $role, $der);
 
 if ($res)
-  print "Certificate with sn $serial and subject " . $cert->tbsCertificate->subject . " saved in $sqlite_db\n";
+  print "Certificate with sn $serial and subject " . $cert->tbsCertificate->subject . " saved in $sql_db\n";
 else {
-  print "Certificate with sn $serial and subject " . $cert->tbsCertificate->subject . " already exists in $sqlite_db\n";
+  print "Certificate with sn $serial and subject " . $cert->tbsCertificate->subject . " already exists in $sql_db\n";
   exit(1);
 }
-
-?>

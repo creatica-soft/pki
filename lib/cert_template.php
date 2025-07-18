@@ -265,5 +265,3 @@ class CertTemplate {
       $this->extensions = clone $this->extensions;
   }
 }
-
-?>

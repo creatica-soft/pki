@@ -122,4 +122,3 @@ else {
   header('Content-Type: application/pkix-cert', true, 200); //RFC-2585
   echo $cert->encode();
 }
-?>

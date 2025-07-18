@@ -226,5 +226,3 @@ class SubjectPublicKeyInfo {
     $this->subjectPublicKey = clone $this->subjectPublicKey;
   }
 }
-
-?>

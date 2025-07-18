@@ -4,7 +4,7 @@ function getCertReqIds($transactionID, $db) {
   global $sql_db;
   $certReqIds = array();
   if ($sql_db == 'postgres') {
-    $res = pg_query_params($db, 'select * from cert_req_ids where transactionID=$1;', array($transactionID));
+    $res = pg_query_params($db, 'select * from cert_req_ids where "transactionID"=$1;', array($transactionID));
     if (! $res) throw new Exception('getCertReqIds() pg_query_params() error');
     while ($certReqId = pg_fetch_assoc($res)) {
       $certReqIds[] = $certReqId;      
@@ -30,8 +30,11 @@ function getCertReqIds($transactionID, $db) {
 }
 
 function sqlGetCertReqIds($transactionID) {
-  global $sql_db, $pg_con, $sqlite_db, $sqlite3_busy_timeoute_msec;
+  global $sql_db, $pg_con, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_encrypted_pass, $signing_ca_privkey_path;
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlGetCertReqIds() pg_connect() error');
     $certReqIds = getCertReqIds($transactionID, $db);
@@ -45,8 +48,11 @@ function sqlGetCertReqIds($transactionID) {
 }
 
 function sqlSaveCertReqIds($serial, $certReqId, $timestamp, $nonce, $transactionID) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $confirm_wait_time_sec, $now;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $confirm_wait_time_sec, $now, $pg_encrypted_pass, $signing_ca_privkey_path;
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlSaveCertReqIds() pg_connect() error');
   } else {
@@ -67,7 +73,7 @@ function sqlSaveCertReqIds($serial, $certReqId, $timestamp, $nonce, $transaction
     }
   }
   if ($sql_db == 'postgres') {
-    $res = pg_query_params($db, 'insert into cert_req_ids(serial, certReqId, timestamp, nonce, transactionID) values($1, $2, $3, $4, $5);', array($serial, $certReqId, $timestamp, $nonce, $transactionID));
+    $res = pg_query_params($db, 'insert into cert_req_ids(serial, "certReqId", timestamp, nonce, "transactionID") values($1, $2, $3, $4, $5);', array($serial, $certReqId, $timestamp, $nonce, $transactionID));
     if (! $res) throw new Exception('sqlSaveCertReqIds() pg_query_params() error');
   } else {
     $query = $db->prepare('insert into cert_req_ids(serial, certReqId, timestamp, nonce, transactionID) values(:serial, :certReqId, :timestamp, :nonce, :transactionID);');
@@ -99,7 +105,7 @@ function sqlSaveCertReqIds($serial, $certReqId, $timestamp, $nonce, $transaction
 function deleteCertReqIds($transactionID, $db) {
   global $sql_db;
   if ($sql_db == 'postgres') {
-    $res = pg_query_params($db, 'delete from cert_req_ids where transactionID = $1;', array($transactionID));
+    $res = pg_query_params($db, 'delete from cert_req_ids where "transactionID" = $1;', array($transactionID));
     if (! $res) throw new Exception('deleteCertReqIds() pg_query_params() error');
     if (! pg_free_result($res)) throw new Exception('deleteCertReqIds() pg_free_result() error');
   } else {
@@ -117,8 +123,11 @@ function deleteCertReqIds($transactionID, $db) {
 }
 
 function sqlDeleteCertReqIds($transactionID) {
-  global $sqlite_db, $sqlite3_busy_timeoute_msec, $sql_db, $pg_con;
+  global $sqlite_db, $sqlite3_busy_timeoute_msec, $sql_db, $pg_con, $pg_encrypted_pass, $signing_ca_privkey_path;
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlDeleteCertReqIds() pg_connect() error');
     deleteCertReqIds($transactionID, $db);
@@ -129,5 +138,3 @@ function sqlDeleteCertReqIds($transactionID) {
     $db->close();
   }
 }
-
-?>

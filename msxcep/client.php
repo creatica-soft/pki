@@ -37,5 +37,3 @@ file_put_contents('/tmp/msxcep-client-request.xml', $soapClient->__getLastReques
 file_put_contents('/tmp/msxcep-server-response-headers.xml', $soapClient->__getLastResponseHeaders());
 //errorLog('Response: ' . $soapClient->__getLastResponse());
 file_put_contents('/tmp/msxcep-server-response.xml', $soapClient->__getLastResponse());
-
-?>

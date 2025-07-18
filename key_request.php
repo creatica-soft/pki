@@ -33,7 +33,7 @@ if (php_sapi_name() == 'cli') {
     $username = $argv[1];
     $password = $argv[2];
   } else {
-    echo 'Usage: php83 key_request.php <username> <password>';
+    echo 'Usage: php key_request.php <username> <password>';
     exit(1);
   }
 } else {
@@ -62,4 +62,4 @@ if (php_sapi_name() == 'cli') {
   header('Content-type: application/json', true, 200);
   echo json_encode($json);
 }
-?>
+

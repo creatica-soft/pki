@@ -200,5 +200,3 @@ $ocspResponse->responseBytes = $responseBytes;
 $encoded = $ocspResponse->encode();
 headers(strlen($encoded));
 echo $encoded;
-
-?>

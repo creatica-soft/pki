@@ -14,4 +14,4 @@ $content_type = 'application/soap+xml; charset=utf-8';
 //lastly, even if it is false, people can still use GenericUser template to request SMIME cert with any emails
 //or even use other PKI protocols such as CMP to do the same
 $allow_user_supplied_emails_in_san = true;
-?>
+

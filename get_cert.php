@@ -55,4 +55,3 @@ foreach ($attrs as $attr) {
 header("Content-Disposition: attachment; filename=$cn.cer"); //RFC-2585
 header('Content-Type: application/pkix-cert', true, 200); //RFC-2585
 echo $cert['cert'];
-?>

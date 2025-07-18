@@ -65,5 +65,3 @@ class CertifiedKeyPair {
     $this->publicationInfo = $publicationInfo;
   }
 }
-
-?>

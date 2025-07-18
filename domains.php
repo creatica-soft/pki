@@ -32,4 +32,3 @@ else {
 	echo json_encode(array($result, $domains), JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR);
 }
 
-?>

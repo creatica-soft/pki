@@ -11,4 +11,3 @@ function base64url_decode($data, $strict = false) {
   $b64 = strtr($data, '-_', '+/');
   return base64_decode($b64, $strict);
 }
-?>

@@ -1,8 +1,11 @@
 <?php
 
 function sqlGetKey($kid) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $pg_encrypted_pass, $signing_ca_privkey_path;
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlGetKey() pg_connect() error');
     $res = pg_query_params($db, 'select key from keys where kid=$1;', array($kid));
@@ -30,8 +33,11 @@ function sqlGetKey($kid) {
 }
 
 function sqlSaveKey($kid, $key) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $pg_encrypted_pass, $signing_ca_privkey_path;
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlSaveKey() pg_connect() error');
     $res = pg_query_params($db, 'select key from keys where kid=$1;', array($kid));
@@ -85,8 +91,11 @@ function sqlSaveKey($kid, $key) {
 }
 
 function sqlDeleteKey($key) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $pg_encrypted_pass, $signing_ca_privkey_path;
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlDeleteKey() pg_connect() error');
     $res = pg_query_params($db, 'delete from keys where key=$1;', array($key));
@@ -111,19 +120,22 @@ function sqlDeleteKey($key) {
 
 //SQLite3 single action functions. For performance reason, bulk actions should be wrapped by $db->open(), $db->close()
 function sqlGetCert($serial) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $pg_encrypted_pass, $signing_ca_privkey_path;
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlGetCert() pg_connect() error');
     $res = pg_query_params($db, 'select * from certs where serial=$1;', array($serial));
     if (! $res) throw new Exception('sqlGetCert() pg_query_params() error');
     $cert = pg_fetch_assoc($res);
     if ($cert) {
-      $cert['cert'] = hex2bin($cert['cert']);
-      $cert['fingerprint'] = hex2bin($cert['fingerprint']);
-      $cert['shash'] = hex2bin($cert['shash']);
-      $cert['iandshash'] = hex2bin($cert['iandshash']);
-      $cert['skidhash'] = hex2bin($cert['skidhash']);      
+      $cert['cert'] = pg_unescape_bytea($cert['cert']);
+      $cert['fingerprint'] = pg_unescape_bytea($cert['fingerprint']);
+      $cert['sHash'] = pg_unescape_bytea($cert['sHash']);
+      $cert['iAndSHash'] = pg_unescape_bytea($cert['iAndSHash']);
+      $cert['sKIDHash'] = pg_unescape_bytea($cert['sKIDHash']);      
     }
     if (! pg_free_result($res)) throw new Exception('sqlGetCert() pg_free_result() error');
   } else {
@@ -147,19 +159,22 @@ function sqlGetCert($serial) {
 }
 
 function sqlSearchCertsByCN($cn, $status = 0) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $pg_encrypted_pass, $signing_ca_privkey_path;
   $certs = array();
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlSearchCertsByCN() pg_connect() error');
     $res = pg_query_params($db, 'select * from certs where cn=$1 and status=$2;', array($cn, $status));
     if (! $res) throw new Exception('sqlSearchCertsByCN() pg_query_params() error');
     while ($cert = pg_fetch_assoc($res)) {
-      $cert['cert'] = hex2bin($cert['cert']);
-      $cert['fingerprint'] = hex2bin($cert['fingerprint']);
-      $cert['shash'] = hex2bin($cert['shash']);
-      $cert['iandshash'] = hex2bin($cert['iandshash']);
-      $cert['skidhash'] = hex2bin($cert['skidhash']);      
+      $cert['cert'] = pg_unescape_bytea($cert['cert']);
+      $cert['fingerprint'] = pg_unescape_bytea($cert['fingerprint']);
+      $cert['sHash'] = pg_unescape_bytea($cert['sHash']);
+      $cert['iAndSHash'] = pg_unescape_bytea($cert['iAndSHash']);
+      $cert['sKIDHash'] = pg_unescape_bytea($cert['sKIDHash']);      
       $certs[] = $cert;      
     }
     if (! pg_free_result($res)) throw new Exception('sqlSearchCertsByCN() pg_free_result() error');
@@ -189,19 +204,22 @@ function sqlSearchCertsByCN($cn, $status = 0) {
 }
 
 function sqlSearchCertsByFingerprint($fingerprint, $status = 0) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $pg_encrypted_pass, $signing_ca_privkey_path;
   $certs = array();
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlSearchCertsByFingerprint() pg_connect() error');
     $res = pg_query_params($db, 'select * from certs where fingerprint=$1 and status=$2;', array(bin2hex($fingerprint), $status));
     if (! $res) throw new Exception('sqlSearchCertsByFingerprint() pg_query_params() error');
     while ($cert = pg_fetch_assoc($res)) {
-      $cert['cert'] = hex2bin($cert['cert']);
-      $cert['fingerprint'] = hex2bin($cert['fingerprint']);
-      $cert['shash'] = hex2bin($cert['shash']);
-      $cert['iandshash'] = hex2bin($cert['iandshash']);
-      $cert['skidhash'] = hex2bin($cert['skidhash']);      
+      $cert['cert'] = pg_unescape_bytea($cert['cert']);
+      $cert['fingerprint'] = pg_unescape_bytea($cert['fingerprint']);
+      $cert['sHash'] = pg_unescape_bytea($cert['sHash']);
+      $cert['iAndSHash'] = pg_unescape_bytea($cert['iAndSHash']);
+      $cert['sKIDHash'] = pg_unescape_bytea($cert['sKIDHash']);      
       $certs[] = $cert;      
     }
     if (! pg_free_result($res)) throw new Exception('sqlSearchCertsByFingerprint() pg_free_result() error');
@@ -231,19 +249,22 @@ function sqlSearchCertsByFingerprint($fingerprint, $status = 0) {
 }
 
 function sqlSearchCertsBySHash($sHash, $status = 0) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $pg_encrypted_pass, $signing_ca_privkey_path;
   $certs = array();
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlSearchCertsBySHash() pg_connect() error');
-    $res = pg_query_params($db, 'select * from certs where sHash=$1 and status=$2;', array(bin2hex($sHash), $status));
+    $res = pg_query_params($db, 'select * from certs where "sHash"=$1 and status=$2;', array(bin2hex($sHash), $status));
     if (! $res) throw new Exception('sqlSearchCertsBySHash() pg_query_params() error');
     while ($cert = pg_fetch_assoc($res)) {
-      $cert['cert'] = hex2bin($cert['cert']);
-      $cert['fingerprint'] = hex2bin($cert['fingerprint']);
-      $cert['shash'] = hex2bin($cert['shash']);
-      $cert['iandshash'] = hex2bin($cert['iandshash']);
-      $cert['skidhash'] = hex2bin($cert['skidhash']);      
+      $cert['cert'] = pg_unescape_bytea($cert['cert']);
+      $cert['fingerprint'] = pg_unescape_bytea($cert['fingerprint']);
+      $cert['sHash'] = pg_unescape_bytea($cert['sHash']);
+      $cert['iAndSHash'] = pg_unescape_bytea($cert['iAndSHash']);
+      $cert['sKIDHash'] = pg_unescape_bytea($cert['sKIDHash']);      
       $certs[] = $cert;      
     }
     if (! pg_free_result($res)) throw new Exception('sqlSearchCertsBySHash() pg_free_result() error');
@@ -273,19 +294,22 @@ function sqlSearchCertsBySHash($sHash, $status = 0) {
 }
 
 function sqlSearchCertsByIAndSHash($iAndSHash, $status = 0) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $pg_encrypted_pass, $signing_ca_privkey_path;
   $certs = array();
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlSearchCertsByIAndSHash() pg_connect() error');
-    $res = pg_query_params($db, 'select * from certs where iAndSHash=$1 and status=$2', array(bin2hex($iAndSHash), $status));
+    $res = pg_query_params($db, 'select * from certs where "iAndSHash"=$1 and status=$2', array(bin2hex($iAndSHash), $status));
     if (! $res) throw new Exception('sqlSearchCertsByIAndSHash() pg_query_params() error');
     while ($cert = pg_fetch_assoc($res)) {
-      $cert['cert'] = hex2bin($cert['cert']);
-      $cert['fingerprint'] = hex2bin($cert['fingerprint']);
-      $cert['shash'] = hex2bin($cert['shash']);
-      $cert['iandshash'] = hex2bin($cert['iandshash']);
-      $cert['skidhash'] = hex2bin($cert['skidhash']);      
+      $cert['cert'] = pg_unescape_bytea($cert['cert']);
+      $cert['fingerprint'] = pg_unescape_bytea($cert['fingerprint']);
+      $cert['sHash'] = pg_unescape_bytea($cert['sHash']);
+      $cert['iAndSHash'] = pg_unescape_bytea($cert['iAndSHash']);
+      $cert['sKIDHash'] = pg_unescape_bytea($cert['sKIDHash']);      
       $certs[] = $cert;      
     }
     if (! pg_free_result($res)) throw new Exception('sqlSearchCertsByIAndSHash() pg_free_result() error');
@@ -315,19 +339,22 @@ function sqlSearchCertsByIAndSHash($iAndSHash, $status = 0) {
 }
 
 function sqlSearchCertsBySKIDHash($sKIDHash, $status = 0) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $pg_encrypted_pass, $signing_ca_privkey_path;
   $certs = array();
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlSearchCertsBySKIDHash() pg_connect() error');
-    $res = pg_query_params($db, 'select * from certs where sKIDHash=$1 and status=$2', array(bin2hex($sKIDHash), $status));
+    $res = pg_query_params($db, 'select * from certs where "sKIDHash"=$1 and status=$2', array(bin2hex($sKIDHash), $status));
     if (! $res) throw new Exception('sqlSearchCertsBySKIDHash() pg_query_params() error');
     while ($cert = pg_fetch_assoc($res)) {
-      $cert['cert'] = hex2bin($cert['cert']);
-      $cert['fingerprint'] = hex2bin($cert['fingerprint']);
-      $cert['shash'] = hex2bin($cert['shash']);
-      $cert['iandshash'] = hex2bin($cert['iandshash']);
-      $cert['skidhash'] = hex2bin($cert['skidhash']);      
+      $cert['cert'] = pg_unescape_bytea($cert['cert']);
+      $cert['fingerprint'] = pg_unescape_bytea($cert['fingerprint']);
+      $cert['sHash'] = pg_unescape_bytea($cert['sHash']);
+      $cert['iAndSHash'] = pg_unescape_bytea($cert['iAndSHash']);
+      $cert['sKIDHash'] = pg_unescape_bytea($cert['sKIDHash']);      
       $certs[] = $cert;      
     }
     if (! pg_free_result($res)) throw new Exception('sqlSearchCertsBySKIDHash() pg_free_result() error');
@@ -360,9 +387,12 @@ function sqlSearchCertsBySKIDHash($sKIDHash, $status = 0) {
 //$subject: DN
 // return an array of certs
 function sqlGetCerts($subject = null, $status = 0) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $pg_encrypted_pass, $signing_ca_privkey_path;
   $certs = array();
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlGetCerts() pg_connect() error');
     if (is_null($subject)) {
@@ -372,11 +402,11 @@ function sqlGetCerts($subject = null, $status = 0) {
     }
     if (! $res) throw new Exception('sqlGetCerts() pg_query_params() error');
     while ($cert = pg_fetch_assoc($res)) {
-      $cert['cert'] = hex2bin($cert['cert']);
-      $cert['fingerprint'] = hex2bin($cert['fingerprint']);
-      $cert['shash'] = hex2bin($cert['shash']);
-      $cert['iandshash'] = hex2bin($cert['iandshash']);
-      $cert['skidhash'] = hex2bin($cert['skidhash']);
+      $cert['cert'] = pg_unescape_bytea($cert['cert']);
+      $cert['fingerprint'] = pg_unescape_bytea($cert['fingerprint']);
+      $cert['sHash'] = pg_unescape_bytea($cert['sHash']);
+      $cert['iAndSHash'] = pg_unescape_bytea($cert['iAndSHash']);
+      $cert['sKIDHash'] = pg_unescape_bytea($cert['sKIDHash']);      
       $certs[] = $cert;      
     }
     if (! pg_free_result($res)) throw new Exception('sqlGetCerts() pg_free_result() error');
@@ -412,18 +442,26 @@ function sqlGetCerts($subject = null, $status = 0) {
 }
 
 function sqlGetOwnCerts($owner, $status = null) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $pg_encrypted_pass, $signing_ca_privkey_path;
   $certs = array();
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlGetOwnCerts() pg_connect() error');
     if (is_null($status)) {
-      $res = pg_query_params($db, 'select serial, status, revocationReason, revocationDate, notBefore, notAfter, subject from certs where owner=$1;', array($owner));
+      $res = pg_query_params($db, 'select serial, status, "revocationReason", "revocationDate", "notBefore", "notAfter", subject from certs where owner=$1;', array($owner));
     } else {
-      $res = pg_query_params($db, 'select serial, status, revocationReason, revocationDate, notBefore, notAfter, subject from certs where owner=$1 and status=$2;', array($owner, $status));      
+      $res = pg_query_params($db, 'select serial, status, "revocationReason", "revocationDate", "notBefore", "notAfter", subject from certs where owner=$1 and status=$2;', array($owner, $status));      
     }
     if (! $res) throw new Exception('sqlGetOwnCerts() pg_query_params() error');
     while ($cert = pg_fetch_assoc($res)) {
+      $cert['cert'] = pg_unescape_bytea($cert['cert']);
+      $cert['fingerprint'] = pg_unescape_bytea($cert['fingerprint']);
+      $cert['sHash'] = pg_unescape_bytea($cert['sHash']);
+      $cert['iAndSHash'] = pg_unescape_bytea($cert['iAndSHash']);
+      $cert['sKIDHash'] = pg_unescape_bytea($cert['sKIDHash']);      
       $certs[] = $cert;      
     }
     if (! pg_free_result($res)) throw new Exception('sqlGetOwnCerts() pg_free_result() error');
@@ -459,8 +497,11 @@ function sqlGetOwnCerts($owner, $status = null) {
 }
 
 function sqlGetOwnCertsCount($owner, $subject = null) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $pg_encrypted_pass, $signing_ca_privkey_path;
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlGetOwnCertsCount() pg_connect() error');
     if (is_null($subject)) {
@@ -476,6 +517,7 @@ function sqlGetOwnCertsCount($owner, $subject = null) {
       $number = 0;
       while ($cert = pg_fetch_assoc($res)) {
         if (key_exists('cert', $cert)) {
+          $cert['cert'] = pg_unescape_bytea($cert['cert']);
           $certificate = new Certificate();
           $certificate->decode($cert['cert']);
           $sans = $certificate->tbsCertificate->extensions->getSubjectAltName();
@@ -541,16 +583,24 @@ function sqlGetOwnCertsCount($owner, $subject = null) {
 }
 
 function sqlGetCertsToExpire($owner, $within_days) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $now;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $now, $pg_encrypted_pass, $signing_ca_privkey_path;
   $i = date_interval_create_from_date_string("$within_days days");
   $notAfter = date_add($now, $i);
   $certs = array();
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlGetCertsToExpire() pg_connect() error');
-    $res = pg_query_params($db, 'select serial, notAfter, subject from certs where owner=$1 and status=0 and notAfter <= $2;', array($owner, $notAfter->getTimestamp()));
+    $res = pg_query_params($db, 'select serial, "notAfter", subject from certs where owner=$1 and status=0 and "notAfter" <= $2;', array($owner, $notAfter->getTimestamp()));
     if (! $res) throw new Exception('sqlGetCertsToExpire() pg_query_params() error');
     while ($cert = pg_fetch_assoc($res)) {
+      $cert['cert'] = pg_unescape_bytea($cert['cert']);
+      $cert['fingerprint'] = pg_unescape_bytea($cert['fingerprint']);
+      $cert['sHash'] = pg_unescape_bytea($cert['sHash']);
+      $cert['iAndSHash'] = pg_unescape_bytea($cert['iAndSHash']);
+      $cert['sKIDHash'] = pg_unescape_bytea($cert['sKIDHash']);      
       $certs[] = $cert;      
     }
     if (! pg_free_result($res)) throw new Exception('sqlGetCertsToExpire() pg_free_result() error');
@@ -581,8 +631,11 @@ function sqlGetCertsToExpire($owner, $within_days) {
 
 //notBefore and notAfter are unix timestamps integers
 function sqlSaveCert($serial, $status, $subject, $notBefore, $notAfter, $owner, $role, $cert) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $pg_encrypted_pass, $signing_ca_privkey_path;
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlSaveCert() pg_connect() error');
     $res = pg_query_params($db, 'select serial from certs where serial=$1;', array($serial));
@@ -647,20 +700,20 @@ function sqlSaveCert($serial, $status, $subject, $notBefore, $notAfter, $owner, 
   $fingerprint = hash('sha1', $cert, $binary = true);
   
   if ($sql_db == 'postgres') {
-    $cert = bin2hex($cert);
-    $fingerprint = bin2hex($fingerprint);
-    $sHash = bin2hex($sHash);
-    $sKIDHash = bin2hex($sKIDHash);
-    $iAndSHash = bin2hex($iAndSHash);
+    $cert = pg_escape_bytea($db, $cert);
+    $fingerprint = pg_escape_bytea($db, $fingerprint);
+    $sHash = pg_escape_bytea($db, $sHash);
+    $sKIDHash = pg_escape_bytea($db, $sKIDHash);
+    $iAndSHash = pg_escape_bytea($db, $iAndSHash);
     
     if (! $owner && ! $role)
-      $res = pg_query_params($db, 'insert into certs(serial, status, notBefore, notAfter, subject, cert, cn, fingerprint, sHash, iAndSHash, sKIDHash) values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);', array($serial, $status, $notBefore, $notAfter, $subject, $cert, $cn, $fingerprint, $sHash, $iAndSHash, $sKIDHash));
+      $res = pg_query_params($db, 'insert into certs(serial, status, "notBefore", "notAfter", subject, cert, cn, fingerprint, "sHash", "iAndSHash", "sKIDHash") values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);', array($serial, $status, $notBefore, $notAfter, $subject, $cert, $cn, $fingerprint, $sHash, $iAndSHash, $sKIDHash));
     elseif ($owner && ! $role)
-      $res = pg_query_params($db, 'insert into certs(serial, status, notBefore, notAfter, subject, owner, cert, cn, fingerprint, sHash, iAndSHash, sKIDHash) values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);', array($serial, $status, $notBefore, $notAfter, $subject, $owner, $cert, $cn, $fingerprint, $sHash, $iAndSHash, $sKIDHash));
+      $res = pg_query_params($db, 'insert into certs(serial, status, "notBefore", "notAfter", subject, owner, cert, cn, fingerprint, "sHash", "iAndSHash", "sKIDHash") values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);', array($serial, $status, $notBefore, $notAfter, $subject, $owner, $cert, $cn, $fingerprint, $sHash, $iAndSHash, $sKIDHash));
     elseif (! $owner && $role)
-      $res = pg_query_params($db, 'insert into certs(serial, status, notBefore, notAfter, subject, role, cert, cn, fingerprint, sHash, iAndSHash, sKIDHash) values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);', array($serial, $status, $notBefore, $notAfter, $subject, $role, $cert, $cn, $fingerprint, $sHash, $iAndSHash, $sKIDHash));
+      $res = pg_query_params($db, 'insert into certs(serial, status, "notBefore", "notAfter", subject, role, cert, cn, fingerprint, "sHash", "iAndSHash", "sKIDHash") values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);', array($serial, $status, $notBefore, $notAfter, $subject, $role, $cert, $cn, $fingerprint, $sHash, $iAndSHash, $sKIDHash));
     else
-      $res = pg_query_params($db, 'insert into certs(serial, status, notBefore, notAfter, subject, owner, role, cert, cn, fingerprint, sHash, iAndSHash, sKIDHash) values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);', array($serial, $status, $notBefore, $notAfter, $subject, $owner, $role, $cert, $cn, $fingerprint, $sHash, $iAndSHash, $sKIDHash));
+      $res = pg_query_params($db, 'insert into certs(serial, status, "notBefore", "notAfter", subject, owner, role, cert, cn, fingerprint, "sHash", "iAndSHash", "sKIDHash") values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);', array($serial, $status, $notBefore, $notAfter, $subject, $owner, $role, $cert, $cn, $fingerprint, $sHash, $iAndSHash, $sKIDHash));
     if (! $res) throw new Exception('sqlSaveCert() pg_query_params() error');
     if (! pg_free_result($res)) throw new Exception('sqlSaveCert() pg_free_result() error');
   } else {
@@ -726,11 +779,14 @@ function sqlSaveCert($serial, $status, $subject, $notBefore, $notAfter, $owner, 
 }
 
 function sqlUpdateCert($serial, $notBefore, $notAfter) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $pg_encrypted_pass, $signing_ca_privkey_path;
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlUpdateCert() pg_connect() error');
-    $res = pg_query_params($db, 'update certs set notBefore = $1, notAfter = $2 where serial = $3;', array($notBefore, $notAfter, $serial));
+    $res = pg_query_params($db, 'update certs set "notBefore" = $1, "notAfter" = $2 where serial = $3;', array($notBefore, $notAfter, $serial));
     if (! $res) throw new Exception('sqlUpdateCert() pg_query_params() error');
     if (! pg_free_result($res)) throw new Exception('sqlUpdateCert() pg_free_result() error');
   } else {
@@ -757,8 +813,11 @@ function sqlUpdateCert($serial, $notBefore, $notAfter) {
 }
 
 function sqlUpdateCertStatus($serial, $status) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $pg_encrypted_pass, $signing_ca_privkey_path;
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlUpdateCertStatus() pg_connect() error');
     $res = pg_query_params($db, 'update certs set status = $1 where serial = $2;', array($status, $serial));
@@ -802,15 +861,18 @@ $revocationReason
 
 */
 function sqlRevokeCert($serial, $revocationDate = null, $revocationReason = 0) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $pg_encrypted_pass, $signing_ca_privkey_path;
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlRevokeCert() pg_connect() error');
     if (is_null($revocationDate)) {
-      $res = pg_query_params($db, 'update certs set status = $1, revocationReason = $2 where serial = $3;', array(-1, $revocationReason, $serial));
+      $res = pg_query_params($db, 'update certs set status = $1, "revocationReason" = $2 where serial = $3;', array(-1, $revocationReason, $serial));
     }
     else {
-      $res = pg_query_params($db, 'update certs set status = $1, revocationDate = $2, revocationReason = $3 where serial = $4;', array(-1, $revocationDate, $revocationReason, $serial));      
+      $res = pg_query_params($db, 'update certs set status = $1, "revocationDate" = $2, "revocationReason" = $3 where serial = $4;', array(-1, $revocationDate, $revocationReason, $serial));      
     }
     if (! $res) throw new Exception('sqlRevokeCert() pg_query_params() error');
     if (! pg_free_result($res)) throw new Exception('sqlRevokeCert() pg_free_result() error');
@@ -848,22 +910,28 @@ function sqlRevokeCert($serial, $revocationDate = null, $revocationReason = 0) {
 
 //checks if a cert is expired and update its status to 1
 function sqlUpdateAllCerts() {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $now;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $now, $pg_encrypted_pass, $signing_ca_privkey_path;
   $certs = array();
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlUpdateAllCerts() pg_connect() error');
-    $res = pg_query_params($db, "select serial, notAfter from certs where status != 1 and subject != 'CRL';");
-    if (! $res) throw new Exception('sqlUpdateAllCerts() pg_query_params() error');
+    $res = pg_query_params($db, 'select serial, "notAfter" from certs where status != $1 and subject != $2;', array(1, "CRL"));
+    if (! $res) {
+      error_log("sqlUpdateAllCerts() error: pg_query_params() failed: " . pg_last_error($db));
+      throw new Exception('sqlUpdateAllCerts() pg_query_params() error');
+    }
     while ($cert = pg_fetch_assoc($res)) {
       $certs[] = $cert;
     }
     if (! pg_free_result($res)) throw new Exception('sqlUpdateAllCerts(select) pg_free_result() error');
-    $res = pg_prepare($db, "", 'update certs set status = 1 where serial = $1;');
+    $res = pg_prepare($db, "", 'update certs set status = $1 where serial = $2;');
     foreach ($certs as $cert) {
       if ($cert['notAfter'] < $now->getTimestamp()) {
         $serial = $cert['serial'];
-        $res = pg_execute($db, "", array($serial));
+        $res = pg_execute($db, "", array(1, $serial));
         if (! $res) throw new Exception('sqlUpdateAllCerts() pg_execute(update) error');
         if (! pg_free_result($res)) throw new Exception('sqlUpdateAllCerts(update) pg_free_result() error');
       }      
@@ -905,8 +973,11 @@ function sqlUpdateAllCerts() {
 // for testing purpose, certs should not be deleted but expired or revoked instead
 // CLR cert should be deleted before adding a new one
 function sqlDeleteCert($serial) {
-  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con;
+  global $sql_db, $sqlite_db, $sqlite3_busy_timeoute_msec, $pg_con, $pg_encrypted_pass, $signing_ca_privkey_path;
   if ($sql_db == 'postgres') {
+    $pass = '';
+    openssl_private_decrypt(hex2bin($pg_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
+    $pg_con = str_replace('postgres_password', $pass, $pg_con);
     $db = pg_connect($pg_con);
     if (! $db) throw new Exception('sqlDeleteCert() pg_connect() error');
     $res = pg_query_params($db, 'delete from certs where serial = $1;', array($serial));
@@ -928,5 +999,3 @@ function sqlDeleteCert($serial) {
     $db->close();
   }
 }
-
-?>

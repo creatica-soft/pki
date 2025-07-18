@@ -128,5 +128,3 @@ foreach ($certs as $cert) {
 $result = array('status' => 200, 'detail' => 'Listing ' . $type . ' certificates');
 header('Content-type: application/json', true, 200);
 echo json_encode(array($result, $certificates), JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR);
-
-?>

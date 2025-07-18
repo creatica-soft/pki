@@ -162,5 +162,3 @@ class POPOSigningKey {
     $this->popoSKInput = null;
   }
 }
-
-?>

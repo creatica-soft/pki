@@ -371,5 +371,3 @@ which only works for printableString. Detail comparison rules are described in R
     }
   }
 }
-
-?>

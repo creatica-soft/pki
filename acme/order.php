@@ -174,5 +174,3 @@ class Order implements JsonSerializable {
     }
   }
 }
-
-?>

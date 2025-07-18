@@ -79,4 +79,3 @@ $server = new SoapServer("policy-service.wsdl", array('soap_version' => SOAP_1_2
 $server->setClass('GetPoliciesService');
 $server->handle();
 //ob_end_flush();
-?>

@@ -115,5 +115,3 @@ class CertConfirmContent {
     $this->certStatus = array();
   }
 }
-
-?>

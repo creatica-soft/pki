@@ -1061,5 +1061,3 @@ class PKIResponse {
     $this->messages = '';
   }
 }
-
-?>

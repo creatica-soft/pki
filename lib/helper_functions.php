@@ -319,14 +319,12 @@ function getCertFields($certFile) {
   if (! file_exists($certFile)) throw new ValueError("File $certFile does not exist"); 
   while (openssl_error_string());
   $cert = openssl_x509_read('file://' . $certFile);
-  if (is_bool($cert))
-    if (! $cert) {
-      $error = '';
-      while ($err = openssl_error_string()) $error .= $err;
-      throw new ValueError("openssl_x509_read(file://$certFile) error: $error");
-    }
+  if (! $cert) {
+    $error = '';
+    while ($err = openssl_error_string()) $error .= $err;
+    throw new ValueError("openssl_x509_read(file://$certFile) error: $error");
+  }
   $cert_fields = openssl_x509_parse($cert);
-  openssl_x509_free($cert);
   return $cert_fields;
 }
 
@@ -595,4 +593,3 @@ function auth($username, $password) {
     throw new Exception("Username ($username, $dn) or password is invalid");
   return $email;
 }
-?>

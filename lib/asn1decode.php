@@ -97,7 +97,7 @@ function decode($type, $binary_string) {
       $value = $binary_string;
     break;
     case UTF8_STRING:
-      $value = utf8_decode($binary_string);
+      $value = mb_convert_encoding($binary_string, 'ISO-8859-1', 'UTF-8'); // used to be utf8_decode($binary_string);
     break;
     case BMP_STRING:
       $value = mb_convert_encoding($binary_string, 'ASCII', 'UNICODE');

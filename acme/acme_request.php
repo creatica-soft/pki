@@ -129,5 +129,3 @@ class AcmeRequest {
     $this->validate();
   }
 }
-
-?>

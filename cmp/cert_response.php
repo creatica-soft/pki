@@ -40,5 +40,3 @@ class CertResponse {
     $this->rspInfo = $rspInfo;
   }
 }
-
-?>

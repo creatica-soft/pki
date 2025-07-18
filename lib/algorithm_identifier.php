@@ -401,5 +401,3 @@ class AlgorithmIdentifier {
       $this->parameters = clone $this->parameters;
   }
 }
-
-?>

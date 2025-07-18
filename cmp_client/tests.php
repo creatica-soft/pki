@@ -69,7 +69,7 @@ $lines = file('openssl.conf');
 if ($lines) {
   $modified = false;
   foreach ($lines as &$line) {
-    if (strncmp($line, 'secret = pass:"get a key"', 24) == 0) {
+    if (strncmp($line, 'secret = pass:', 14) == 0) {
       if ($username != "test")
         auth($username, $password);
       $key = base64url_encode(openssl_random_pseudo_bytes(64));
@@ -84,7 +84,7 @@ if ($lines) {
   if ($modified) file_put_contents("openssl.conf", $lines);
 }
 
-$now = date_create(null, new DateTimeZone("+0000"))->getTimestamp();
+$now = date_create("now", new DateTimeZone("+0000"))->getTimestamp();
 
 $verbosity = 3; //0 = EMERG, 1 = ALERT, 2 = CRIT, 3 = ERR, 4 = WARN, 5 = NOTE, 6 = INFO, 7 = DEBUG, 8 = TRACE. Defaults to 6 = INFO
 $sections = "cmp";
@@ -94,7 +94,7 @@ $numberOfRuns = 1;
 
 $runNumber = 0;
 $testNumber = 0;
-$timeStart = date_create(null);
+$timeStart = date_create();
 
 $cmds = ['cr','kur','rr','genm'];
 $options = ['',
@@ -219,8 +219,7 @@ while($runNumber++ < $numberOfRuns) {
     }
   }
 }
-$timeEnd = date_create(null);
+$timeEnd = date_create();
 print "Exec time for $numberOfRuns runs and $testNumber tests is " . date_diff($timeStart, $timeEnd)->format("%M:%S.%F") . "min:sec\n";
 foreach ($serialNumbers as $serial)
   sqlDeleteCert($serial, $cmp = false);
-?>

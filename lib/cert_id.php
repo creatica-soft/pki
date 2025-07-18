@@ -163,5 +163,3 @@ class CertificateID {
     $this->hashAlg = clone $this->hashAlg;
   }
 }
-
-?>

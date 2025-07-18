@@ -62,9 +62,9 @@ in cert_req_ids should be deleted
 sudo sqlite3 $DB_DIR/certs.db \
   'create table keys(kid TEXT PRIMARY KEY ASC, key TEXT);'
 */
-$sql_db = "$SQL_DB"; //'postgres' or 'sqlite3'
-$pg_con = "host=$PG_DNS port=5432 dbname=postgres user=postgres password=postgres sslmode=verify-full sslrootcert=system"; //allow,prefer,require,verify-ca,verify-full
-$sqlite_db = "$DB_DIR/certs.db";
+$sql_db = "$DB"; //'postgres' or 'sqlite'
+$pg_con = "host=$PG_DNS port=5432 dbname=postgres user=postgres password=postgres_password sslmode=$SSL_MODE $SSL_ROOT_CERT"; //disable,allow,prefer,require,verify-ca,verify-full
+$sqlite_db = "$DB_DIR/sqlite/certs.db";
 $sqlite3_busy_timeoute_msec = 1000;
 
 $ldap_uri = "ldaps://$LDAP_DNS ldaps://$LDAP_DNS2";
@@ -80,5 +80,4 @@ $ldap_binding_dn = "$LDAP_BINDING_DN";
  to decrypt call openssl_private_decrypt(hex2bin($ldap_encrypted_pass), $pass, file_get_contents($signing_ca_privkey_path));
 */
 $ldap_encrypted_pass = "$LDAP_ENC_PASSWORD";
-
-?>
+$pg_encrypted_pass = "$PG_ENC_PASSWORD";

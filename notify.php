@@ -77,5 +77,3 @@ EOF;
 	else response(200, 'Email has been sent to ' . $to);
 }
 else response(404, 'No certificates will expire in ' . $expire . ' days');
-
-?>

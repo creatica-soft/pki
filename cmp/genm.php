@@ -331,5 +331,3 @@ class GeneralInfo {
     $this->generalInfo = array();
   }
 }
-
-?>

@@ -82,5 +82,3 @@ class Challenge implements JsonSerializable {
     $this->error = null;
   }
 }
-
-?>

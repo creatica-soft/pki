@@ -30,7 +30,7 @@ $numberOfRuns = 1;
 
 $runNumber = 0;
 $testNumber = 0;
-$timeStart = date_create(null);
+$timeStart = date_create();
 
 $uris = ['simpleenroll']; //'simplereenroll' - is identical at this time;
 
@@ -114,10 +114,9 @@ while($runNumber++ < $numberOfRuns) {
     }
   }
 }
-$timeEnd = date_create(null);
+$timeEnd = date_create();
 print "Exec time for $numberOfRuns runs and $testNumber tests is " . date_diff($timeStart, $timeEnd)->format("%M:%S.%F") . "min:sec\n";
 if ($success) print "All tests are successful!\n";
 else print "Some tests have failed, please review the output\n";
 foreach ($serialNumbers as $serial)
   sqlDeleteCert($serial);
-?>

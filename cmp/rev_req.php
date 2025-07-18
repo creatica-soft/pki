@@ -115,5 +115,3 @@ class RevReqContent {
     $this->revReqs = array();
   }
 }
-
-?>

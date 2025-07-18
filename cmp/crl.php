@@ -37,5 +37,3 @@ $len = strlen($encoded);
 header('Content-Type: application/pkix-crl', true);
 header('Content-Length: ' . $len, true, 200);  
 echo $encoded;
-
-?>

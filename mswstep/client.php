@@ -48,5 +48,3 @@ file_put_contents('/tmp/mswstep-client-request.xml', $soapClient->__getLastReque
 file_put_contents('/tmp/mswstep-server-response-headers.xml', $soapClient->__getLastResponseHeaders());
 //errorLog('Response: ' . $soapClient->__getLastResponse());
 file_put_contents('/tmp/mswstep-server-response.xml', $soapClient->__getLastResponse());
-
-?>

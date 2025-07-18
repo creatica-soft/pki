@@ -88,5 +88,3 @@ class ErrorMsgContent {
     $this->pkiStatusInfo = new PKIStatusInfo();
   }
 }
-
-?>

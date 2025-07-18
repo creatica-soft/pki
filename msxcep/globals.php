@@ -125,5 +125,3 @@ $ca_enroll_permission = [[true]];
 $ca_auth = [[4]];
 $ca_cert1 = file_get_contents($signing_ca_der_path);
 $ca_cert = [$ca_cert1];
-
-?>

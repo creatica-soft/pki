@@ -247,5 +247,3 @@ The character string type UniversalString supports any of the
   }
   return $value;
 }
-
-?>

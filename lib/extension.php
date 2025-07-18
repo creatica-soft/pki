@@ -965,5 +965,3 @@ id-ce-cRLNumber OBJECT IDENTIFIER ::= { id-ce 20 }
     $this->critical = false;
   }
 }
-
-?>

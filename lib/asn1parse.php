@@ -118,4 +118,3 @@ if (key_exists(2, $argv) && $argv[2] == 'pem') {
 
 asn1parse($asn1data);
 
-?>

@@ -32,7 +32,7 @@ $nonce_expires_sec = 3600;
 $curl_max_redirections = 10; //maximum redirections when validating http-01 challenge
 $curl_ipresolve = CURL_IPRESOLVE_V4; // or CURL_IPRESOLVE_V6
 $hmac_key_length = 64; //should be provided to a client in base64url_encoded() form
-$acme_db = "$DB_DIR/acme.db"; //ACME tables are kept in a separate sqlite3 db
+$acme_db = "$DB_DIR/sqlite/acme.db"; //ACME tables are kept in a separate sqlite3 db
 /* 
 sudo sqlite3 $DB_DIR/acme.db \
   'create table nonces(nonce TEXT PRIMARY KEY ASC, ip TEXT, expires INTEGER);' \
@@ -73,5 +73,3 @@ sudo sqlite3 $DB_DIR/acme.db \
 
 nonces table is used for ACME nonces, ip is the acme client's IP address; once the nonce is used, it's removed from the table
 */
-
-?>

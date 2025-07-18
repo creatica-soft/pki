@@ -82,5 +82,3 @@ class PKIBody {
     return asn1encode($class = 2, $constructed = true, $type = $this->type, $value = $encoded);
   }
 }
-
-?>

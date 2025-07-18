@@ -91,5 +91,3 @@ class Controls {
     $this->controlSeq = array();
   }
 }
-
-?>

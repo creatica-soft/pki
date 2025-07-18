@@ -463,5 +463,3 @@ class GeneralNames {
   }
 
 }
-
-?>

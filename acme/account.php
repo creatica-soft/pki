@@ -187,5 +187,3 @@ class Account implements JsonSerializable {
     $this->orders = $base_url . $accountsUrl . $this->id . $ordersUrl;
   }
 }
-
-?>

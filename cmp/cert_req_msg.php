@@ -223,5 +223,3 @@ class CertReqMessage {
     $this->regInfo = null;
   }
 }
-
-?>

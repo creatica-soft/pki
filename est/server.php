@@ -34,6 +34,12 @@ function exception_handler($e) {
   estError("Internal PKI EST Server: " . $e->getMessage(), 500);
 }
 
+// Convert errors to exceptions
+//set_error_handler(function ($severity, $message, $file, $line) {
+//    error_log("PHP Error: $message in $file on line $line");
+//    throw new ErrorException($message, 0, $severity, $file, $line);
+//});
+
 set_exception_handler('exception_handler');
 
 $authenticated = false;
@@ -192,5 +198,3 @@ Then delete subject and issuer from the test.example.internal.crt if those lines
     errorLog("est-server.php error: unrecognized http request method " . $_SERVER['REQUEST_METHOD']);
     estError('unknown http request method', 400);        
 }
-
-?>

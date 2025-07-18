@@ -1,24 +1,35 @@
-# docker build -t alpine-pki --rm --secret id=ldap,env=LDAP_PASSWORD .
+# docker build -t alpine-pki --rm --secret id=ldap,env=LDAP_PASSWORD --secret id=pg,env=PG_PASSWORD .
 ARG ALPINE_VER="3.22"
 ARG ALPINE_ARCH="arm64v8"
 FROM $ALPINE_ARCH/alpine:$ALPINE_VER
 ARG TZ="Australia/Brisbane"
 ARG PHP_VER="84"
-ARG PKI_DNS="pki.example.com"
+ARG PG_VER="17"
+ARG PKI_DNS="pki.example.org"
 ARG FPM_DNS="127.0.0.1"
-ARG SMTP_DNS="smtp.example.com"
-ARG TEST_DNS="test.example.com"
+ARG PG_DNS="127.0.0.1"
+ARG SSL_MODE="disable"
+ARG SSL_ROOT_CERT="sslrootcert="
+ARG SMTP_DNS="smtp.example.org"
+ARG TEST_DNS="test.example.org"
+ARG LDAP_DNS="ldap.example.org"
+ARG LDAP_DNS2="ldap2.example.org"
+ARG LDAP_BINDING_DN="CN=ldap,OU=SERVICE ACCOUNT,DC=example,DC=org"
+ARG OU_USERS="OU=USERS,DC=example,DC=org"
+ARG OU_SERVICE_ACCOUNTS="OU=SERVICE ACCOUNTS,DC=example,DC=org"
 ARG DB_DIR="/var/pki"
-RUN apk update && \
+ARG DB="postgres" # sqlite or postgres
+COPY . /tmp
+RUN  --mount=type=secret,id=ldap,env=LDAP_PASSWORD --mount=type=secret,id=pg,env=PG_PASSWORD \
+    apk update && \
     apk upgrade && \
-    apk add tzdata alpine-conf gettext-envsubst uuidgen logrotate coreutils sudo openssl3 php$PHP_VER php$PHP_VER-openssl php$PHP_VER-fpm php$PHP_VER-curl php$PHP_VER-soap php$PHP_VER-xml php$PHP_VER-gmp php$PHP_VER-ldap php$PHP_VER-sqlite3 php$PHP_VER-mbstring php$PHP_VER-pgsql nginx nginx-mod-http-headers-more sqlite certbot curl && \
+    apk add tzdata alpine-conf gettext-envsubst uuidgen logrotate coreutils sudo openssl3 php$PHP_VER php$PHP_VER-openssl php$PHP_VER-fpm php$PHP_VER-curl php$PHP_VER-soap php$PHP_VER-xml php$PHP_VER-gmp php$PHP_VER-ldap php$PHP_VER-sqlite3 php$PHP_VER-mbstring php$PHP_VER-pgsql postgresql$PG_VER nginx nginx-mod-http-headers-more sqlite certbot curl && \
     echo "alpine ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
     setup-timezone $TZ && \
     adduser -G nobody -D alpine && \
     sed -i -e '/^alpine/s/!/*/' /etc/shadow && \
-    adduser nobody mail
-COPY . /tmp
-RUN --mount=type=secret,id=ldap,env=LDAP_PASSWORD \
+    adduser nobody mail && \
+    sed -i "s/error_log .*/error_log stderr;/" /etc/nginx/nginx.conf && \
     cd /tmp && \
     envsubst '$SMTP_DNS $PKI_DNS $PHP_VER' < etc/php$PHP_VER/php.ini | tee /etc/php$PHP_VER/php.ini && \
     envsubst '$FPM_DNS' < etc/php$PHP_VER/php-fpm.d/www.conf | tee /etc/php$PHP_VER/php-fpm.d/www.conf && \
@@ -30,9 +41,9 @@ RUN --mount=type=secret,id=ldap,env=LDAP_PASSWORD \
     envsubst '$PKI_DNS $TEST_DNS' < cmp_client/tests.php | tee cmp_client/tests.php && \
     envsubst '$PKI_DNS $TEST_DNS' < domains.txt | tee domains.txt && \
     envsubst '$PKI_DNS' < est_client/tests.php | tee est_client/tests.php && \
-    envsubst '$PHP_VER' < encrypt_pass.php | tee encrypt_pass.php && \
+    envsubst '$PHP_VER $PKI_DNS' < encrypt_pass.php | tee encrypt_pass.php && \
     envsubst '$PKI_DNS $FPM_DNS' < etc/nginx/http.d/pki.example.com.conf | tee /etc/nginx/http.d/$PKI_DNS.conf && \
-    envsubst '$PHP_VER' < go.sh |tee /usr/bin/go.sh && \
+    envsubst '$PHP_VER $DB_DIR $DB' < go.sh |tee /usr/bin/go.sh && \
     chmod 755 /usr/bin/go.sh && \
     touch /var/log/php$PHP_VER/error.log && \
     chown nobody:nobody /var/log/php$PHP_VER/error.log && \
@@ -64,16 +75,31 @@ RUN --mount=type=secret,id=ldap,env=LDAP_PASSWORD \
     sed -i s/root_ca.key/signing_ca.key/g /etc/ssl/openssl.cnf && \
     chown -R alpine:nobody /var/www/$PKI_DNS && \
     chmod 755 /var/www/$PKI_DNS/certbot/*.sh && \
-    mkdir $DB_DIR && \
-    sqlite3 --init /var/www/$PKI_DNS/init-certs.sql $DB_DIR/certs.db && \
-    sqlite3 --init /var/www/$PKI_DNS/init-acme.sql $DB_DIR/acme.db && \
-    chown -R nobody:nobody $DB_DIR && \
-    chmod 775 $DB_DIR && \
-    chmod 664 $DB_DIR/*.db && \
+    mkdir -p $DB_DIR/pg && \
+    mkdir $DB_DIR/sqlite && \
+    sqlite3 --init /var/www/$PKI_DNS/init-certs.sql $DB_DIR/sqlite/certs.db && \
+    sqlite3 --init /var/www/$PKI_DNS/init-acme.sql $DB_DIR/sqlite/acme.db && \
+    chown -R nobody:nobody $DB_DIR/sqlite && \
+    chmod 775 $DB_DIR/sqlite && \
+    chmod 664 $DB_DIR/sqlite/*.db && \
+    chown postgres:postgres $DB_DIR/pg && \
+    chmod 750 $DB_DIR/pg && \
+    mkdir /run/postgresql && \
+    chown postgres:postgres /run/postgresql && \
+    sudo -u postgres initdb -D $DB_DIR/pg && \
+    sudo -u postgres pg_ctl start -D $DB_DIR/pg && \
+    sudo -u postgres psql -c "ALTER USER postgres WITH ENCRYPTED PASSWORD '$PG_PASSWORD';" && \
+    psql -f /var/www/$PKI_DNS/createdb.sql postgres postgres && \
     cd /var/www/$PKI_DNS && \
-    export LDAP_ENC_PASSWORD=`php$PHP_VER encrypt_pass.php $LDAP_PASSWORD` && \
-    envsubst '$PKI_DNS $LDAP_DNS $LDAP_DNS2 $LDAP_BINDING_DN $OU_USERS $OU_SERVICE_ACCOUNTS $SQL_DB $DB_DIR $PG_DNS $LDAP_ENC_PASSWORD' < lib/config.php | tee lib/config.php && \
-    sudo -u nobody php$PHP_VER save_cert.php /etc/ssl/$PKI_DNS.der
+    echo $LDAP_PASSWORD | tee /tmp/ldap_password && \
+    echo $PG_PASSWORD |tee /tmp/pg_password && \
+    export LDAP_ENC_PASSWORD=$(php$PHP_VER encrypt_pass.php $LDAP_PASSWORD) && \
+    export PG_ENC_PASSWORD=$(php$PHP_VER encrypt_pass.php $PG_PASSWORD) && \
+    echo $LDAP_ENC_PASSWORD | tee /tmp/enc_ldap && \
+    echo $PG_ENC_PASSWORD | tee /tmp/enc_pg && \
+    envsubst '$PKI_DNS $LDAP_DNS $LDAP_DNS2 $LDAP_BINDING_DN $OU_USERS $OU_SERVICE_ACCOUNTS $DB $DB_DIR $PG_DNS $SSL_MODE $SSL_ROOT_CERT $LDAP_ENC_PASSWORD $PG_ENC_PASSWORD' < lib/config.php | tee lib/config.php && \
+    php$PHP_VER save_cert.php /etc/ssl/$PKI_DNS.der && \
+    sudo -u postgres pg_ctl stop -D $DB_DIR/pg
 EXPOSE 80/tcp 443/tcp
 USER alpine
 WORKDIR /home/alpine
