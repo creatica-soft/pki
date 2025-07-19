@@ -5,4 +5,4 @@ CREATE INDEX if not exists cn_idx on certs(cn); CREATE INDEX fingerprint_idx on 
 CREATE INDEX if not exists iAndSHash_idx on certs(iAndSHash); CREATE INDEX sKIDHash_idx on certs(sKIDHash);
 create table if not exists cert_req_ids(serial TEXT PRIMARY KEY ASC, certReqId TEXT, timestamp INTEGER, nonce TEXT, transactionID TEXT);
 CREATE INDEX if not exists certReqId_idx on cert_req_ids(certReqId); CREATE INDEX transactionID_idx on cert_req_ids(transactionID);
-create table keys(kid TEXT PRIMARY KEY ASC, key TEXT);
+create table if not exists keys(kid TEXT PRIMARY KEY ASC, key TEXT);

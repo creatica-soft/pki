@@ -1,5 +1,5 @@
 <?php
-require_once '/var/www/$PKI_DNS/lib/config.php';
+require_once '/var/www/pki/lib/config.php';
 if ($argc == 2) {
   $ldap_encrypted_pass = ''; 
   openssl_public_encrypt($argv[1], $ldap_encrypted_pass, openssl_x509_read("file://$signing_ca_path"));

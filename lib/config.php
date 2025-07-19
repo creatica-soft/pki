@@ -4,7 +4,7 @@ $base_url = "https://$PKI_DNS";
 
 $master_users = ['admin'];
 
-$domains_file = "/var/www/$PKI_DNS/domains.txt";
+$domains_file = "/var/www/pki/domains.txt";
 $allowed_ips_in_san = "/\A10\.(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){2}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\z/";
 
 //$signed_data_version = 3; //3 - for ms-wstep; 4 - for est - these are set in respective globals.php
@@ -40,28 +40,6 @@ $aia_ca_issuers = ["http://$PKI_DNS/pki/signing_ca.crt"];
 $aia_ocsp = ["http://$PKI_DNS/ocsp/"];
 
 $crl_next_update_in_days = 30;
-/* 
-sudo sqlite3 $DB_DIR/certs.db \
-  'create table certs(serial TEXT PRIMARY KEY ASC, status INTEGER, revocationReason INTEGER, revocationDate INTEGER, notBefore INTEGER, notAfter INTEGER, subject TEXT, owner TEXT, role TEXT, cert BLOB, cn TEXT, fingerprint TEXT, sHash TEXT, iAndSHash TEXT, sKIDHash TEXT);' \
-  'CREATE INDEX subj_idx on certs(subject); CREATE INDEX status_idx on certs(status); CREATE INDEX from_idx on certs(notBefore);' \
-  'CREATE INDEX to_idx on certs(notAfter); CREATE INDEX owner_idx on certs(owner); CREATE INDEX role_idx on certs(role);' \
-  'CREATE INDEX cn_idx on certs(cn); CREATE INDEX fingerprint_idx on certs(fingerprint); CREATE INDEX sHash_idx on certs(sHash);' \
-  'CREATE INDEX iAndSHash_idx on certs(iAndSHash); CREATE INDEX sKIDHash_idx on certs(sKIDHash);'
-
-status: 0 - valid, 1 - expired, -1 - revoked
-
-sudo sqlite3 $DB_DIR/certs.db \
-  'create table cert_req_ids(serial TEXT PRIMARY KEY ASC, certReqId TEXT, timestamp INTEGER, nonce TEXT, transactionID TEXT);' \
-  'CREATE INDEX certReqId_idx on cert_req_ids(certReqId); CREATE INDEX transactionID_idx on cert_req_ids(transactionID);'
-
-cert_req_ids table is used by CMP only and has unconfirmed cert_req_ids; once confirmed (or denied) in CERTCONF message or unconfirmed within 
-$confirm_wait_time_sec, the cert status should be updated in certs table from 2 (on-hold) to either 0 (valid) or revoked (-1) and the record 
-in cert_req_ids should be deleted
-
-//key is base64url_encoded key bytes
-sudo sqlite3 $DB_DIR/certs.db \
-  'create table keys(kid TEXT PRIMARY KEY ASC, key TEXT);'
-*/
 $sql_db = "$DB"; //'postgres' or 'sqlite'
 $pg_con = "host=$PG_DNS port=5432 dbname=postgres user=postgres password=postgres_password sslmode=$SSL_MODE $SSL_ROOT_CERT"; //disable,allow,prefer,require,verify-ca,verify-full
 $sqlite_db = "$DB_DIR/sqlite/certs.db";
