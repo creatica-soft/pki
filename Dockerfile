@@ -5,6 +5,8 @@ FROM $ALPINE_ARCH/alpine:$ALPINE_VER
 ARG TZ="Australia/Brisbane"
 ARG PHP_VER="84"
 ARG PG_VER="17"
+ARG ROOT_CA_CN="InternalRootCA"
+ARG SIGNING_CA_CN="InternalSigningCA"
 ARG PKI_DNS="pki.example.org"
 ARG FPM_DNS="127.0.0.1"
 ARG PG_DNS="127.0.0.1"
@@ -36,7 +38,7 @@ RUN  --mount=type=secret,id=ldap,env=LDAP_PASSWORD --mount=type=secret,id=pg,env
     envsubst '$DB_DIR' < acme/globals.php | tee acme/globals.php && \
     envsubst '$PKI_DNS' < certbot/certbot.conf | tee certbot/certbot.conf && \
     envsubst '$PKI_DNS $TEST_DNS $PHP_VER' < certbot/tests.sh | tee certbot/tests.sh && \
-    envsubst '$PKI_DNS $PHP_VER' < cmp_client/openssl.conf | tee cmp_client/openssl.conf && \
+    envsubst '$PKI_DNS $PHP_VER $SIGNING_CA_CN' < cmp_client/openssl.conf | tee cmp_client/openssl.conf && \
     envsubst '$PKI_DNS $TEST_DNS' < cmp_client/tests.php | tee cmp_client/tests.php && \
     envsubst '$PKI_DNS $TEST_DNS' < domains.txt | tee domains.txt && \
     envsubst '$PKI_DNS' < est_client/tests.php | tee est_client/tests.php && \
@@ -49,10 +51,10 @@ RUN  --mount=type=secret,id=ldap,env=LDAP_PASSWORD --mount=type=secret,id=pg,env
     mkdir -p /var/www/pki/pki && \
     cp -r acme certificates certbot cmp cmp_client crls est est_client lib mswstep msxcep ocsp domains.txt *.html *.php *.ico *.sql /var/www/pki/ && \
     rm -rf /tmp/* && \
-    openssl req -x509 -newkey rsa:4096 -subj /CN=InternalRootCA -extensions v3_ca_root -config /etc/ssl/openssl.cnf -days 3650 -out /etc/ssl/root_ca.pem -keyout /etc/ssl/private/root_ca.key -noenc && \
+    openssl req -x509 -newkey rsa:4096 -subj /CN=$ROOT_CA_CN -extensions v3_ca_root -config /etc/ssl/openssl.cnf -days 3650 -out /etc/ssl/root_ca.pem -keyout /etc/ssl/private/root_ca.key -noenc && \
     openssl x509 -inform PEM -outform DER -in /etc/ssl/root_ca.pem -out /etc/ssl/root_ca.der && \
     sed -i s/2048/4096/ /etc/ssl/openssl.cnf && \
-    openssl req -CA /etc/ssl/root_ca.pem -CAkey /etc/ssl/private/root_ca.key -subj /CN=InternalSigningCA -extensions v3_ca_sub -config /etc/ssl/openssl.cnf -days 3650 -out /etc/ssl/signing_ca.pem -keyout /etc/ssl/private/signing_ca.key -noenc && \
+    openssl req -CA /etc/ssl/root_ca.pem -CAkey /etc/ssl/private/root_ca.key -subj /CN=$SIGNING_CA_CN -extensions v3_ca_sub -config /etc/ssl/openssl.cnf -days 3650 -out /etc/ssl/signing_ca.pem -keyout /etc/ssl/private/signing_ca.key -noenc && \
     cat /etc/ssl/signing_ca.pem /etc/ssl/root_ca.pem | tee /etc/ssl/ca_chain.pem && \
     openssl x509 -inform PEM -outform DER -in /etc/ssl/signing_ca.pem -out /etc/ssl/signing_ca.der && \
     sed -i s/4096/2048/ /etc/ssl/openssl.cnf && \
