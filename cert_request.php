@@ -18,13 +18,14 @@ set_exception_handler('exception_handler');
 $certFolder = '';
 
 if (empty($_REQUEST["username"]) || empty($_REQUEST["password"]) || empty($_REQUEST["role"]))
-  response(400, 'Usage: ' . full_request_uri() . '?username=<username>&password=<password>&role=<standard|master>&description=<jira_ticket_description>');
+  response(400, 'Usage: ' . $base_url . '/cert_request.php?username=<username>&password=<password>&role=<standard|master>');
     
 $username = sanitize($_REQUEST["username"]);
 $password = sanitize($_REQUEST["password"]);
 $role = sanitize($_REQUEST["role"]);
 $pubkey = sanitize($_REQUEST["pubkey"]);
-$mail = auth($username, $password);
+if ($ldap_auth)
+  $mail = auth($username, $password);
 
 //at this point we authenticated the user and can
 //issue CMP Client SSL Certificate for /CN=$username/ROLE=$role
@@ -51,7 +52,7 @@ if (! is_null($certs)) {
   $cert->decode($certs[0]['cert']);
 } elseif ($role != 'master' || in_array($username, $master_users)) { //create a new cert
   if (empty($_REQUEST["pubkey"]))
-    response(400, 'Usage: ' . full_request_uri() . '?username=<username>&password=<password>&role=<standard|master>&description=<jira_ticket_description>');
+    response(400, 'Usage: ' . $base_url . '/cert_request.php?username=<username>&password=<password>&role=<standard|master>&description=<jira_ticket_description>');
   $certTemplate = new CertTemplate();
   if ($role == 'smime')
     $certTemplate->subject = new Name(null);

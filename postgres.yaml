@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  clusterIP: None
+  selector:
+    app: postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: alpine-postgres:3.22
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: postgres-key
+          mountPath: "/var/pki/pg/postgres_ssl.key"
+          subPath: "postgres.key"
+          readOnly: true
+        - name: postgres-pem
+          mountPath: "/var/pki/pg/postgres.pem"
+          subPath: "postgres.pem"
+          readOnly: true
+        - name: root-ca
+          mountPath: "/etc/ssl/root_ca.pem"
+          subPath: "root_ca.pem"
+          readOnly: true
+        - name: signing-ca
+          mountPath: "/var/pki/pg/signing_ca.pem"
+          subPath: "signing_ca.pem"
+          readOnly: true
+        - name: pki
+          mountPath: /var/pki
+      volumes:
+      - name: postgres-key
+        secret:
+          secretName: postgres
+          items:
+          - key: "tls.key"
+            path: "postgres.key"
+            mode: 0400
+      - name: postgres-pem
+        secret:
+          secretName: postgres
+          items:
+          - key: "tls.crt"
+            path: "postgres.pem"
+            mode: 0444
+      - name: signing-ca
+        secret:
+          secretName: signing-ca
+          items:
+          - key: "tls.crt"
+            path: "signing_ca.pem"
+            mode: 0444
+      - name: root-ca
+        secret:
+          secretName: root-ca
+          items:
+          - key: "tls.crt"
+            path: "root_ca.pem"
+            mode: 0444
+      - name: pki
+        persistentVolumeClaim:
+          claimName: pki
+---

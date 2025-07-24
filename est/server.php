@@ -133,7 +133,7 @@ one might want to delete subject and issuer lines in cacerts.pem and leave just 
       }
     } else 
       $password = $_SERVER['PHP_AUTH_PW'];
-    if (isset($username) && isset($password) && ! $authenticated)
+    if (isset($username) && isset($password) && ! $authenticated && $ldap_auth)
       auth($username, $password);
     
     $estRequest = file_get_contents('php://input');

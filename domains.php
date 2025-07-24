@@ -1,6 +1,6 @@
 <?php
 
-require_once('globals.php');
+require_once('config.php');
 require_once('helper_functions.php');
 
 if (isset($_REQUEST["cn"]) && !empty($_REQUEST["cn"])) 

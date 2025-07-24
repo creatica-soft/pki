@@ -8,7 +8,7 @@ $cert = 'user.p12';
 $cmp_server = "$PKI_DNS";
 $base_url = 'https://' . $cmp_server . '/.well-known/est';
 
-$dns_cmp = checkdnsrr($cmp_server, "ANY");
+$dns_cmp = checkdnsrr($cmp_server, "A");
 if (! $dns_cmp) {
   $cmp_found = false;
   $hosts = file("/etc/hosts");

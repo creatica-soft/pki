@@ -39,6 +39,47 @@ For production, /var/pki folder should probably be placed in a docker persistent
 docker contrainer start -i alpine-pki 
 ```
 
+For a scalable deployment, run each component (postgres, php-fpm, nginx) in a separate kubernetes pod. stunnel is added to nginx and php-fpm as side-car containers to secure communication between nginx and php-fpm. postgres is configured to run over SSL. Ideally, change postgres from a deployment type kubernetes workload to a stateful set and have master-slave replicas. Dockerfiles are provided to for each component to remove dependencies and make it more flexible. 
+
+Review Dockerfiles first and make adjustment to ARGs. Build docker images using a command from each Dockerfile (commented first line). Review config.env file and make adjustments to variables. Run create_certs.sh script, which sources config.env to generate root, signing CAs and server (nginx, php, php-fpm, postgres) SSL certificates and create kubernetes secrets and config maps. Start with deploying init workload. It initializes persistent volumes (using docker volumes - adjust as needed): one for postgres database, another for PKI software (php and html files) shared between php-fpm and nginx. Deploy servers in kubernetes using provided YAML manifests. Check the logs. Run tests from init deployment. It can be removed once tested. Note that some tests are meant to fail - this is expected. cmp_client tests normally produce no output if all tests are successful. est_client and certbot produce some output. est_client tests should end with a line saying that all tests succeeded. And it should be no red lines in certbot tests.
+
+```
+docker build -t alpine-init:3.22 --rm -f Dockerfile-init .
+docker build -t alpine-fpm:3.22 -f Dockerfile-fpm --rm .
+docker build -t alpine-nginx:3.22 -f Dockerfile-nginx --rm .
+docker build -t alpine-postgres:3.22 -f Dockerfile-postgres --rm .
+docker build -t alpine-stunnel-fpm:3.22 -f Dockerfile-stunnel-fpm --rm .
+docker build -t alpine-stunnel-nginx:3.22 -f Dockerfile-stunnel-nginx --rm .
+chmod 755 create_certs.sh
+./create_certs.sh
+kubectl apply -f init.yaml
+kubectl logs -l app=init --tail=-1
+kubectl apply -f postgres.yaml
+kubectl logs -l app=postgres --tail=-1
+kubectl apply -f php-fpm.yaml
+kubectl logs -l app=php-fpm --tail=-1
+kubectl apply -f nginx.yaml
+kubectl logs -l app=nginx --tail=-1
+kubectl exec -t -i <nginx-pod> -- sh
+sudo -u alpine -s
+cd /var/www/pki/cmp_client
+php84 tests.php
+cd ../est_client
+php84 tests.php
+cd ../certbot
+./tests.sh
+exit
+exit
+kubectl delete deployment init
+```
+
+To delete PKI deployment from kubernetes, run cleanup.sh script. It will undo the above steps except docker images won't be removed.
+
+```
+chmod 755 cleanup.sh
+./cleanup.sh
+```
+
 Openssl version 3 includes RFC4120-compliant CMP client, which has been tested to work with this server.
 Openssl ocsp client has been tested with OCSP server.
 Let's Encrypt Certbot has been tested with ACME server.
@@ -67,7 +108,7 @@ See index.html
 
 ### Certificate databases
 
-Certificates are stored in sqlite3 or postgres db depending on ARG DB in Dockerfile. See init-cert.sql and init-acme.sql for sqlite3 schema and createdb.sql for postgres schema.
+Certificates are stored in sqlite3 or postgres db depending on ARG DB in Dockerfiles. See init-cert.sql and init-acme.sql for sqlite3 schema and createdb.sql for postgres schema.
 
 ### Common PHP library
 

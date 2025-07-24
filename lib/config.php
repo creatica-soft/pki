@@ -7,7 +7,6 @@ $master_users = ['admin'];
 $domains_file = "/var/www/pki/domains.txt";
 $allowed_ips_in_san = "/\A10\.(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){2}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\z/";
 
-//$signed_data_version = 3; //3 - for ms-wstep; 4 - for est - these are set in respective globals.php
 $digest_algs = ['sha256'];
 $default_digest_alg ='sha256';
 $default_encrypting_alg = 'rsaEncryption';
@@ -45,6 +44,7 @@ $pg_con = "host=$PG_DNS port=5432 dbname=postgres user=postgres password=postgre
 $sqlite_db = "$DB_DIR/sqlite/certs.db";
 $sqlite3_busy_timeoute_msec = 1000;
 
+$ldap_auth = $LDAP_AUTH; //true for production or false for testing
 $ldap_uri = "ldaps://$LDAP_DNS ldaps://$LDAP_DNS2";
 $ldap_network_timeout_sec = 3;
 $ldap_tls_require_cert = LDAP_OPT_X_TLS_DEMAND; // for expired certs use LDAP_OPT_X_TLS_NEVER

@@ -6,7 +6,7 @@ ACME_SERVER=$PKI_DNS
 export CERTBOT_DOMAIN=$TEST_DNS
 export REQUESTS_CA_BUNDLE=/etc/ssl/ca_chain.pem
 #sudo apk add certbot
-FOUND=`host $CERTBOT_DOMAIN 2>&1` 
+FOUND=`nslookup $CERTBOT_DOMAIN 2>&1` 
 if [ "$?" != 0 ]; then
   FOUND=`grep $CERTBOT_DOMAIN /etc/hosts`
   if [ "${FOUND}" == "" ]; then
@@ -14,7 +14,7 @@ if [ "$?" != 0 ]; then
     exit 1
   fi
 fi 
-FOUND=`host $ACME_SERVER 2>&1`
+FOUND=`nslookup $ACME_SERVER 2>&1`
 if [ "$?" != 0 ]; then
   FOUND=`grep $ACME_SERVER /etc/hosts`
   if [ "${FOUND}" == "" ]; then
@@ -37,9 +37,10 @@ server {
         }
 }
 END"
-#sudo service nginx reload
 sudo nginx -s reload
-
+if [ "$?" != 0 ]; then
+  sudo nginx
+fi
 # verify certbot.conf file
 # run the tests
 mkdir logs
@@ -57,5 +58,4 @@ certbot -c certbot.conf unregister -n
 rm -rf accounts archive backups csr keys live renewal renewal-hooks logs
 sudo rm -rf /etc/nginx/http.d/${CERTBOT_DOMAIN}.conf
 sudo rm -rf /var/www/${CERTBOT_DOMAIN}/
-#sudo service nginx reload
 sudo nginx -s reload

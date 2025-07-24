@@ -1,0 +1,20 @@
+#docker build -t alpine-nginx:3.22 -f Dockerfile-nginx --rm .
+ARG ALPINE_VER="3.22"
+ARG ALPINE_ARCH="arm64v8"
+FROM $ALPINE_ARCH/alpine:$ALPINE_VER
+LABEL version="3.22"
+ARG TZ="Australia/Brisbane"
+ARG PKI_DNS="pki.example.com"
+ARG RESOLVER="10.96.0.10"
+RUN apk update && \
+    apk upgrade && \
+    apk add tzdata alpine-conf coreutils openssl3 gettext-envsubst ca-certificates nginx nginx-mod-http-headers-more && \
+    setup-timezone $TZ && \
+    sed -i "s/error_log .*/error_log stderr;/" /etc/nginx/nginx.conf
+COPY --chmod=644 --chown=root:root etc/nginx/http.d/pki.conf /etc/nginx/http.d/pki.conf
+COPY --chmod=755 --chown=root:root nginx.sh /usr/bin/
+RUN  envsubst '$PKI_DNS $RESOLVER' < /etc/nginx/http.d/pki.conf | tee /etc/nginx/http.d/pki.conf
+VOLUME /var/www/pki
+EXPOSE 80/tcp 443/tcp
+ENTRYPOINT ["nginx.sh"]
+

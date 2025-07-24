@@ -92,13 +92,14 @@ class RequestSecurityTokenService {
   }
   
   function Security($security) {
-    global $ldap_encrypted_pass, $signing_ca_privkey_path, $ldap_uri, $ldap_binding_dn, $ldap_base_dn, $ldap_service_accounts_base_dn, $ldap_ca_cert_file;
+    global $ldap_auth, $ldap_encrypted_pass, $signing_ca_privkey_path, $ldap_uri, $ldap_binding_dn, $ldap_base_dn, $ldap_service_accounts_base_dn, $ldap_ca_cert_file;
     if (is_object($security) && get_class($security) == 'stdClass') {
       if (is_object($security->UsernameToken) && get_class($security->UsernameToken) == 'stdClass') {
         if (! is_null($security->UsernameToken->Username) && ! is_null($security->UsernameToken->Password)) {
           $this->username = $security->UsernameToken->Username;
           $password = $security->UsernameToken->Password;
-          $this->mail = auth($this->username, $password);
+          if ($ldap_auth)
+            $this->mail = auth($this->username, $password);
           errorLog("mswstep server.php Security(): user " . $this->username . " authenticated successfully");
         } else
           throw new Exception('missing Username and/or Password in the header');

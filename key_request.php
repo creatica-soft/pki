@@ -38,12 +38,12 @@ if (php_sapi_name() == 'cli') {
   }
 } else {
   if (empty($_REQUEST["username"]) || empty($_REQUEST["password"]))
-    acmeError('usage', 'Usage: ' . full_request_uri() . '?username=<username>&password=<password>', 400);
+    acmeError('usage', 'Usage: ' . $base_url . '/key_request.php?username=<username>&password=<password>', 400);
   $username = sanitize($_REQUEST["username"]);
   $password = sanitize($_REQUEST["password"]);
 }
 //This is for testing only! Comment out "if" line in production
-if ($username != "test")
+if ($ldap_auth)
   auth($username, $password);
 
 //at this point we authenticated the user and can

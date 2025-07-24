@@ -1,0 +1,17 @@
+#docker build -t alpine-stunnel-nginx:3.22 -f Dockerfile-stunnel-nginx --rm .
+ARG ALPINE_VER="3.22"
+ARG ALPINE_ARCH="arm64v8"
+FROM $ALPINE_ARCH/alpine:$ALPINE_VER
+LABEL version="3.22"
+ARG TZ="Australia/Brisbane"
+ARG NAMESPACE="default"
+ARG K8S_DNS_SUFFIX="cluster.local"
+ARG FPM_DNS="php-fpm.$NAMESPACE.svc.$K8S_DNS_SUFFIX"
+RUN apk update && \
+    apk upgrade && \
+    apk add tzdata alpine-conf coreutils openssl3 ca-certificates gettext-envsubst stunnel && \
+    setup-timezone $TZ
+COPY --chown=root:root --chmod=644 etc/stunnel/stunnel-nginx.conf /etc/stunnel/stunnel.conf
+COPY --chown=root:root --chmod=755 stunnel.sh /usr/bin/
+RUN envsubst '$FPM_DNS' < /etc/stunnel/stunnel.conf | tee /etc/stunnel/stunnel.conf
+ENTRYPOINT ["stunnel.sh"]

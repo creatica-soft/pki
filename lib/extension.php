@@ -174,7 +174,7 @@ class Extensions {
               $san[] = new GeneralName($cn);
               $extension->setSubjectAltName($san);          
           } else {
-            if (! in_array(str2oid('E-mail Protection'), $eku))
+            if (! isset($eku) || ! in_array(str2oid('E-mail Protection'), $eku))
               throw new Exception("Extensions::set() error: Unaccepted SAN extension: missing CN in the cert template subject");
           }
         break;

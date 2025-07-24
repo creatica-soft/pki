@@ -1,0 +1,14 @@
+#docker build -t alpine-stunnel-fpm:3.22 -f Dockerfile-stunnel-fpm --rm .
+ARG ALPINE_VER="3.22"
+ARG ALPINE_ARCH="arm64v8"
+FROM $ALPINE_ARCH/alpine:$ALPINE_VER
+LABEL version="3.22"
+ARG TZ="Australia/Brisbane"
+RUN apk update && \
+    apk upgrade && \
+    apk add tzdata alpine-conf coreutils openssl3 gettext-envsubst ca-certificates stunnel && \
+    setup-timezone $TZ
+COPY --chown=root:root --chmod=644 etc/stunnel/stunnel-fpm.conf /etc/stunnel/stunnel.conf
+COPY --chown=root:root --chmod=755 stunnel.sh /usr/bin/
+EXPOSE 9001/tcp
+ENTRYPOINT ["stunnel.sh"]

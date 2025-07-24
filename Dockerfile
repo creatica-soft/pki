@@ -1,19 +1,22 @@
-# docker build -t alpine-pki --rm --secret id=ldap,env=LDAP_PASSWORD --secret id=pg,env=PG_PASSWORD .
+# docker build -t alpine-pki:3.22 --rm --secret id=ldap,env=LDAP_PASSWORD --secret id=pg,env=PG_PASSWORD .
 ARG ALPINE_VER="3.22"
 ARG ALPINE_ARCH="arm64v8"
 FROM $ALPINE_ARCH/alpine:$ALPINE_VER
+LABEL version="3.22"
 ARG TZ="Australia/Brisbane"
 ARG PHP_VER="84"
 ARG PG_VER="17"
 ARG ROOT_CA_CN="InternalRootCA"
 ARG SIGNING_CA_CN="InternalSigningCA"
 ARG PKI_DNS="pki.example.org"
+ARG RESOLVER="8.8.8.8" #nginx resolver in pki.conf
 ARG FPM_DNS="127.0.0.1"
 ARG PG_DNS="127.0.0.1"
 ARG SSL_MODE="disable"
 ARG SSL_ROOT_CERT="sslrootcert="
 ARG SMTP_DNS="smtp.example.org"
 ARG TEST_DNS="test.example.org"
+ARG LDAP_AUTH=false
 ARG LDAP_DNS="ldap.example.org"
 ARG LDAP_DNS2="ldap2.example.org"
 ARG LDAP_BINDING_DN="CN=ldap,OU=SERVICE ACCOUNT,DC=example,DC=org"
@@ -25,7 +28,7 @@ COPY . /tmp
 RUN  --mount=type=secret,id=ldap,env=LDAP_PASSWORD --mount=type=secret,id=pg,env=PG_PASSWORD \
     apk update && \
     apk upgrade && \
-    apk add tzdata alpine-conf gettext-envsubst uuidgen logrotate coreutils sudo openssl3 php$PHP_VER php$PHP_VER-openssl php$PHP_VER-fpm php$PHP_VER-curl php$PHP_VER-soap php$PHP_VER-xml php$PHP_VER-gmp php$PHP_VER-ldap php$PHP_VER-sqlite3 php$PHP_VER-mbstring php$PHP_VER-pgsql postgresql$PG_VER nginx nginx-mod-http-headers-more sqlite certbot curl && \
+    apk add tzdata alpine-conf gettext-envsubst uuidgen logrotate coreutils sudo openssl3 ca-certificates php$PHP_VER php$PHP_VER-openssl php$PHP_VER-fpm php$PHP_VER-curl php$PHP_VER-soap php$PHP_VER-xml php$PHP_VER-gmp php$PHP_VER-ldap php$PHP_VER-sqlite3 php$PHP_VER-mbstring php$PHP_VER-pgsql postgresql$PG_VER nginx nginx-mod-http-headers-more sqlite certbot curl && \
     echo "alpine ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
     setup-timezone $TZ && \
     adduser -G nobody -D alpine && \
@@ -43,7 +46,7 @@ RUN  --mount=type=secret,id=ldap,env=LDAP_PASSWORD --mount=type=secret,id=pg,env
     envsubst '$PKI_DNS $TEST_DNS' < domains.txt | tee domains.txt && \
     envsubst '$PKI_DNS' < est_client/tests.php | tee est_client/tests.php && \
     envsubst '$PHP_VER' < encrypt_pass.php | tee encrypt_pass.php && \
-    envsubst '$PKI_DNS $FPM_DNS' < etc/nginx/http.d/pki.conf | tee /etc/nginx/http.d/pki.conf && \
+    envsubst '$PKI_DNS $FPM_DNS $RESOLVER' < etc/nginx/http.d/pki.conf | tee /etc/nginx/http.d/pki.conf && \
     envsubst '$PHP_VER $DB_DIR $DB' < go.sh |tee /usr/bin/go.sh && \
     chmod 755 /usr/bin/go.sh && \
     touch /var/log/php$PHP_VER/error.log && \
@@ -63,7 +66,8 @@ RUN  --mount=type=secret,id=ldap,env=LDAP_PASSWORD --mount=type=secret,id=pg,env
     openssl x509 -inform PEM -outform DER -in /etc/ssl/pki.pem -out /etc/ssl/pki.der && \
     chown root:nobody /etc/ssl/private/signing_ca.key && \
     chmod 440 /etc/ssl/private/signing_ca.key && \
-    cat /etc/ssl/root_ca.pem | tee -a /etc/ssl/certs/ca-certificates.crt && \
+    cp /etc/ssl/root_ca.pem /usr/local/share/ca-certificates/ && \
+    update-ca-certificates && \
     cp /etc/ssl/root_ca.der /var/www/pki/pki/root_ca.crt && \
     cp /etc/ssl/signing_ca.der /var/www/pki/pki/signing_ca.crt && \
     sed -i s/signing_ca.pem/root_ca.pem/g /etc/ssl/openssl.cnf && \
@@ -94,7 +98,7 @@ RUN  --mount=type=secret,id=ldap,env=LDAP_PASSWORD --mount=type=secret,id=pg,env
     cd /var/www/pki && \
     export LDAP_ENC_PASSWORD=$(php$PHP_VER encrypt_pass.php $LDAP_PASSWORD) && \
     export PG_ENC_PASSWORD=$(php$PHP_VER encrypt_pass.php $PG_PASSWORD) && \
-    envsubst '$PKI_DNS $LDAP_DNS $LDAP_DNS2 $LDAP_BINDING_DN $OU_USERS $OU_SERVICE_ACCOUNTS $DB $DB_DIR $PG_DNS $SSL_MODE $SSL_ROOT_CERT $LDAP_ENC_PASSWORD $PG_ENC_PASSWORD' < lib/config.php | tee lib/config.php && \
+    envsubst '$PKI_DNS $LDAP_AUTH $LDAP_DNS $LDAP_DNS2 $LDAP_BINDING_DN $OU_USERS $OU_SERVICE_ACCOUNTS $DB $DB_DIR $PG_DNS $SSL_MODE $SSL_ROOT_CERT $LDAP_ENC_PASSWORD $PG_ENC_PASSWORD' < lib/config.php | tee lib/config.php && \
     php$PHP_VER save_cert.php /etc/ssl/pki.der && \
     sudo -u postgres pg_ctl stop -D $DB_DIR/pg
 EXPOSE 80/tcp 443/tcp

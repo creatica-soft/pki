@@ -1,0 +1,214 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: init
+spec:
+  clusterIP: None
+  selector:
+    app: init
+  ports:
+  - port: 5432
+    targetPort: 5432
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: www
+spec:
+  capacity:
+    storage: 10Mi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  hostPath:
+    path: /var/lib/docker/volumes/www/_data
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pki
+spec:
+  capacity:
+    storage: 20Mi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  hostPath:
+    path: /var/lib/docker/volumes/pki/_data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: www
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  resources:
+    requests:
+      storage: 10Mi
+---      
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pki
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  resources:
+    requests:
+      storage: 20Mi
+---      
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: init
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: init
+  template:
+    metadata:
+      labels:
+        app: init
+    spec:
+      containers:
+      - name: init
+        image: alpine-init:3.22
+        imagePullPolicy: Never
+        env:
+        - name: LDAP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ldap-secret
+              key: ldap-pass
+        - name: PG_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pg-secret
+              key: pg-pass
+        volumeMounts:
+        - name: pki-crt
+          mountPath: "/etc/ssl/pki.der"
+          subPath: "pki.der"
+          readOnly: true
+        - name: fpm
+          mountPath: "/etc/ssl/fpm.der"
+          subPath: "fpm.der"
+          readOnly: true
+        - name: postgres
+          mountPath: "/etc/ssl/postgres.der"
+          subPath: "postgres.der"
+          readOnly: true
+        - name: signing-ca-pem
+          mountPath: "/etc/ssl/signing_ca.pem"
+          subPath: "signing_ca.pem"
+          readOnly: true
+        - name: signing-ca-key
+          mountPath: "/etc/ssl/private/signing_ca.k"
+          subPath: "signing_ca.key"
+          readOnly: true
+        - name: signing-ca-crt
+          mountPath: "/etc/ssl/signing_ca.der"
+          subPath: "signing_ca.der"
+          readOnly: true
+        - name: root-ca-pem
+          mountPath: "/etc/ssl/root_ca.pem"
+          subPath: "root_ca.pem"
+          readOnly: true
+        - name: root-ca-crt
+          mountPath: "/etc/ssl/root_ca.der"
+          subPath: "root_ca.der"
+          readOnly: true
+        - name: root-ca-crl
+          mountPath: "/etc/ssl/root_ca.crl"
+          subPath: "root_ca.crl"
+          readOnly: true
+        - name: ca-chain-pem
+          mountPath: "/etc/ssl/ca_chain.pem"
+          subPath: "ca_chain.pem"
+          readOnly: true
+        - name: www
+          mountPath: "/var/www/pki"
+        - name: pki
+          mountPath: "/var/pki"
+      volumes:
+      - name: pki-crt
+        configMap:
+          name: pki-crt
+          items:
+          - key: "pki.der"
+            path: "pki.der"
+            mode: 0444
+      - name: fpm
+        configMap:
+          name: fpm-crt
+          items:
+          - key: "fpm.der"
+            path: "fpm.der"
+            mode: 0444
+      - name: postgres
+        configMap:
+          name: postgres-crt
+          items:
+          - key: "postgres.der"
+            path: "postgres.der"
+            mode: 0444
+      - name: signing-ca-pem
+        secret:
+          secretName: signing-ca
+          items:
+          - key: "tls.crt"
+            path: "signing_ca.pem"
+            mode: 0444
+      - name: signing-ca-key
+        secret:
+          secretName: signing-ca
+          items:
+          - key: "tls.key"
+            path: "signing_ca.key"
+            mode: 0400
+      - name: signing-ca-crt
+        configMap:
+          name: signing-ca-crt
+          items:
+          - key: "signing_ca.der"
+            path: "signing_ca.der"
+            mode: 0444
+      - name: root-ca-pem
+        secret:
+          secretName: root-ca
+          items:
+          - key: "tls.crt"
+            path: "root_ca.pem"
+            mode: 0444
+      - name: root-ca-crt
+        configMap:
+          name: root-ca-crt
+          items:
+          - key: "root_ca.der"
+            path: "root_ca.der"
+            mode: 0444
+      - name: root-ca-crl
+        configMap:
+          name: root-ca-crl
+          items:
+          - key: "root_ca.crl"
+            path: "root_ca.crl"
+            mode: 0444
+      - name: ca-chain-pem
+        configMap:
+          name: ca-chain-pem
+          items:
+          - key: "ca_chain.pem"
+            path: "ca_chain.pem"
+            mode: 0444
+      - name: www
+        persistentVolumeClaim:
+          claimName: www
+      - name: pki
+        persistentVolumeClaim:
+          claimName: pki
+---

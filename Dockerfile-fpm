@@ -1,0 +1,27 @@
+#docker build -t alpine-fpm:3.22 -f Dockerfile-fpm --rm .
+ARG ALPINE_VER="3.22"
+ARG ALPINE_ARCH="arm64v8"
+FROM $ALPINE_ARCH/alpine:$ALPINE_VER
+LABEL version="3.22"
+ARG PHP_VER="84" # update ENTRYPOINT as well
+ARG DB_DIR="/var/pki"
+ARG FPM_DNS="0.0.0.0"
+ARG SMTP_DNS="smpt.example.com"
+ARG TZ="Australia/Brisbane"
+RUN apk update && \
+    apk upgrade && \
+    apk add tzdata alpine-conf coreutils uuidgen openssl3 gettext-envsubst ca-certificates php$PHP_VER php$PHP_VER-openssl php$PHP_VER-fpm php$PHP_VER-curl php$PHP_VER-soap php$PHP_VER-xml php$PHP_VER-gmp php$PHP_VER-ldap php$PHP_VER-sqlite3 php$PHP_VER-mbstring php$PHP_VER-pgsql && \
+    setup-timezone $TZ && \
+    adduser nobody mail
+COPY --chown=root:root --chmod=644 etc/php$PHP_VER/php-fpm.d/www.conf /etc/php$PHP_VER/php-fpm.d/
+COPY --chown=root:root --chmod=644 etc/php$PHP_VER/php.ini /etc/php$PHP_VER/
+COPY --chown=root:root --chmod=755 php-fpm.sh /usr/bin/
+RUN envsubst '$SMTP_DNS $PHP_VER' < /etc/php$PHP_VER/php.ini | tee /etc/php$PHP_VER/php.ini && \
+    envsubst '$FPM_DNS' < /etc/php$PHP_VER/php-fpm.d/www.conf | tee /etc/php$PHP_VER/php-fpm.d/www.conf && \
+    envsubst '$PHP_VER' < /usr/bin/php-fpm.sh | tee /usr/bin/php-fpm.sh && \
+    sed -i "s/error_log.*/error_log = \/proc\/self\/fd\/2/" /etc/php$PHP_VER/php.ini && \
+    sed -i "s/;access.log/access.log/" /etc/php$PHP_VER/php-fpm.d/www.conf
+VOLUME /var/www/pki
+VOLUME $DB_DIR
+EXPOSE 9000/tcp
+ENTRYPOINT ["php-fpm.sh"]

@@ -70,7 +70,7 @@ if ($lines) {
   $modified = false;
   foreach ($lines as &$line) {
     if (strncmp($line, 'secret = pass:', 14) == 0) {
-      if ($username != "test")
+      if ($ldap_auth)
         auth($username, $password);
       $key = base64url_encode(openssl_random_pseudo_bytes(64));
       sqlSaveKey($username, $key);

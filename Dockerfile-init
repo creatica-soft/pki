@@ -1,0 +1,51 @@
+#docker build -t alpine-init:3.22 --rm -f Dockerfile-init .
+ARG ALPINE_VER="3.22"
+ARG ALPINE_ARCH="arm64v8"
+FROM $ALPINE_ARCH/alpine:$ALPINE_VER
+LABEL version="3.22"
+ARG NAMESPACE="default"
+ARG K8S_DNS_SUFFIX="cluster.local"
+ARG TZ="Australia/Brisbane"
+ARG PHP_VER="84"
+ARG PG_VER="17"
+ARG PKI_DNS="pki.example.com"
+ARG SIGNING_CA_CN="InternalSigningCA"
+ARG PG_DNS="postgres.$NAMESPACE.svc.$K8S_DNS_SUFFIX"
+ARG SSL_MODE="verify-full"
+ARG SSL_ROOT_CERT="sslrootcert=system"
+ARG SMTP_DNS="smtp.example.com"
+ARG TEST_DNS="init.$NAMESPACE.svc.$K8S_DNS_SUFFIX"
+ARG LDAP_AUTH=false
+ARG LDAP_DNS="ldap.example.com"
+ARG LDAP_DNS2="ldap2.example.com"
+ARG LDAP_BINDING_DN="CN=ldap,OU=SERVICE ACCOUNTS,DC=example,DC=com"
+ARG OU_USERS="OU=USERS,DC=example,DC=com"
+ARG OU_SERVICE_ACCOUNTS="OU=SERVICE ACCOUNTS,DC=example,DC=com"
+ARG DB_DIR="/var/pki"
+ARG DB="postgres" # sqlite or postgres
+COPY . /tmp
+RUN apk update && \
+    apk upgrade && \
+    apk add tzdata alpine-conf gettext-envsubst uuidgen logrotate coreutils sudo openssl3 ca-certificates php$PHP_VER php$PHP_VER-openssl php$PHP_VER-fpm php$PHP_VER-curl php$PHP_VER-soap php$PHP_VER-xml php$PHP_VER-gmp php$PHP_VER-ldap php$PHP_VER-sqlite3 php$PHP_VER-mbstring php$PHP_VER-pgsql postgresql$PG_VER nginx nginx-mod-http-headers-more sqlite certbot curl && \
+    echo "alpine ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
+    setup-timezone $TZ && \
+    adduser -G nobody -D alpine && \
+    sed -i -e '/^alpine/s/!/*/' /etc/shadow && \
+    cd /tmp && \
+    envsubst '$PHP_VER $DB_DIR' < init.sh |tee /usr/bin/init.sh && \
+    envsubst '$PHP_VER $SMTP_DNS' < etc/php$PHP_VER/php.ini |tee /etc/php$PHP_VER/php.ini && \
+    envsubst '$DB_DIR' < acme/globals.php | tee acme/globals.php && \
+    envsubst '$PKI_DNS' < certbot/certbot.conf | tee certbot/certbot.conf && \
+    envsubst '$PKI_DNS $TEST_DNS $PHP_VER' < certbot/tests.sh | tee certbot/tests.sh && \
+    envsubst '$PKI_DNS $PHP_VER $SIGNING_CA_CN' < cmp_client/openssl.conf | tee cmp_client/openssl.conf && \
+    envsubst '$PKI_DNS $TEST_DNS' < cmp_client/tests.php | tee cmp_client/tests.php && \
+    envsubst '$PKI_DNS $TEST_DNS' < domains.txt | tee domains.txt && \
+    envsubst '$PKI_DNS' < est_client/tests.php | tee est_client/tests.php && \
+    envsubst '$PHP_VER $PKI_DNS' < encrypt_pass.php | tee encrypt_pass.php && \
+    envsubst '$PKI_DNS $LDAP_AUTH $LDAP_DNS $LDAP_DNS2 $LDAP_BINDING_DN $OU_USERS $OU_SERVICE_ACCOUNTS $DB $DB_DIR $PG_DNS $SSL_MODE $SSL_ROOT_CERT' < lib/config.php | tee lib/config.php && \
+    chmod 755 /usr/bin/init.sh && \
+    mkdir -p /var/www/pki
+VOLUME /var/www/pki
+VOLUME $DB_DIR
+ENTRYPOINT ["/usr/bin/init.sh"]
+

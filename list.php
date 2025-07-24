@@ -35,7 +35,7 @@ if (!empty($_REQUEST["expire"])) {
     $expire = date_interval_create_from_date_string($expire . ' days');
     $expire = date_add($now, $expire)->getTimestamp();
   }
-  else response(400, 'Usage: ' . full_request_uri() . '?type=<issued|revoked|expired|all>&expire=<DAYS>');
+  else response(400, 'Usage: ' . $base_url . '/list.php?type=<issued|revoked|expired|all>&expire=<DAYS>');
 }
 
 if (!empty($_REQUEST["type"])) {  
@@ -58,7 +58,7 @@ if (!empty($_REQUEST["type"])) {
       $type = 'all';
     break;
     default:
-      response(400, 'Usage: ' . full_request_uri() . '?type=<issued|revoked|expired|all>&expire=<DAYS>');
+      response(400, 'Usage: ' . $base_url . '/list.php?type=<issued|revoked|expired|all>&expire=<DAYS>');
   }
 }
 

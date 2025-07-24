@@ -37,7 +37,7 @@ foreach ($attrs as $attr) {
 if (!empty($_REQUEST["email"])) 
 	$to = sanitize($_REQUEST["email"]);
 else 
-	response(400, 'Usage: ' . full_request_uri() . '?email=<email>&expire=<days>');
+	response(400, 'Usage: ' . $base_url . '/notify.php?email=<email>&expire=<days>');
 
 if (!empty($_REQUEST["expire"])) 
 	$expire = sanitize($_REQUEST["expire"]);
