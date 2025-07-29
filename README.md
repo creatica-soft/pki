@@ -80,7 +80,7 @@ chmod 755 cleanup.sh
 ./cleanup.sh
 ```
 
-To deploy PKI in a cloud VM, ssh to an alpine-based VM in a cloud, install git, clone this repo, review and update vm.env file and execute vm-create-pki.sh. Run tests locally and remotely. vm-create-sh.sh will attempt to obtain Let's encrypt SSL certificate for your PKI server using it's public DNS name, so that you can access your PKI over Internet with SSL encryption using globally trusted root CA.
+To deploy PKI in a cloud VM, ssh to an alpine-based VM in a cloud, install git, clone this repo, review and update vm.env file and execute vm-create-pki.sh. Run tests locally and remotely. vm-create-pki.sh will attempt to obtain Let's encrypt SSL certificate for your PKI server using it's public DNS name, so that you can access your PKI over Internet with SSL encryption using globally trusted root CA. vm-create-pki.sh script is written to enable only sqlite database, which is sufficient for a single VM. If you really need to run postgres in the same VM, you would need to modify the script.
 
 ```
 pwd
