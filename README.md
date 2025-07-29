@@ -80,6 +80,32 @@ chmod 755 cleanup.sh
 ./cleanup.sh
 ```
 
+To deploy PKI in a cloud VM, ssh to an alpine-based VM in a cloud, install git, clone this repo, review and update vm.env file and execute vm-create-pki.sh. Run tests locally and remotely. vm-create-sh.sh will attempt to obtain Let's encrypt SSL certificate for your PKI server using it's public DNS name, so that you can access your PKI over Internet with SSL encryption using globally trusted root CA.
+
+```
+pwd
+/home/alpine
+
+git clone https://github.com/creatica-soft/pki
+
+cd pki
+
+vi vm.env
+
+chmod 755 vm-create-pki.sh
+
+./vm-create-pki.sh
+
+cd /var/www/pki/cmp_client
+php84 tests.php
+
+cd ../est_client
+php84 tests.php
+
+cd ../certbot
+./tests.sh
+```
+
 Openssl version 3 includes RFC4120-compliant CMP client, which has been tested to work with this server.
 Openssl ocsp client has been tested with OCSP server.
 Let's Encrypt Certbot has been tested with ACME server.
