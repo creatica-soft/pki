@@ -1,3 +1,5 @@
 # allowed domain suffixes
-example.internal
-default.svc.cluster.local
+internal
+local
+$PKI_DNS
+$TEST_DNS

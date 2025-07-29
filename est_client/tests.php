@@ -96,7 +96,7 @@ while($runNumber++ < $numberOfRuns) {
           $testNumber++;
           $command = "openssl req -new -subj /CN=$subject $ext $key -keyout $subject.key -nodes -out $subject.req";
           $res = `$command`;
-          $command = "curl -4 --silent --cacert cacerts.pem --cert-type P12 --cert $cert --data-binary @$subject.req" . ' -H "Content-Type: application/pkcs10"' . " $base_url/simpleenroll | openssl base64 -d -A | openssl pkcs7 -inform der -print_certs -out $subject.crt";
+          $command = "curl -4 --silent --cacert /etc/ssl/certs/ca-certificates.crt --cert-type P12 --cert $cert --data-binary @$subject.req" . ' -H "Content-Type: application/pkcs10"' . " $base_url/simpleenroll | openssl base64 -d -A | openssl pkcs7 -inform der -print_certs -out $subject.crt";
           $res = `$command`;
           if (file_exists("$subject.crt")) {
             $serial = `openssl x509 -in $subject.crt -serial -noout | cut -f2 -d'='`;

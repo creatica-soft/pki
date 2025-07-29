@@ -23,7 +23,7 @@ ARG LDAP_BINDING_DN="CN=ldap,OU=SERVICE ACCOUNT,DC=example,DC=org"
 ARG OU_USERS="OU=USERS,DC=example,DC=org"
 ARG OU_SERVICE_ACCOUNTS="OU=SERVICE ACCOUNTS,DC=example,DC=org"
 ARG DB_DIR="/var/pki"
-ARG DB="postgres" # sqlite or postgres
+ARG DB="sqlite" # sqlite or postgres
 COPY . /tmp
 RUN  --mount=type=secret,id=ldap,env=LDAP_PASSWORD --mount=type=secret,id=pg,env=PG_PASSWORD \
     apk update && \
@@ -82,8 +82,8 @@ RUN  --mount=type=secret,id=ldap,env=LDAP_PASSWORD --mount=type=secret,id=pg,env
     chmod 755 /var/www/pki/certbot/*.sh && \
     mkdir -p $DB_DIR/pg && \
     mkdir $DB_DIR/sqlite && \
-    sqlite3 --init /var/www/pki/init-certs.sql $DB_DIR/sqlite/certs.db && \
-    sqlite3 --init /var/www/pki/init-acme.sql $DB_DIR/sqlite/acme.db && \
+    sqlite3 $DB_DIR/sqlite/certs.db < /var/www/pki/init-certs.sql && \
+    sqlite3 $DB_DIR/sqlite/acme.db < /var/www/pki/init-acme.sql && \
     chown -R nobody:nobody $DB_DIR/sqlite && \
     chmod 770 $DB_DIR/sqlite && \
     chmod 660 $DB_DIR/sqlite/*.db && \

@@ -121,6 +121,15 @@ if ($result_code != 0) {
 }
 unset($output);
 
+if (file_exists("user.pem")) {
+  $user_cert = fopen("user.pem", 'a');
+  $signing_ca_cert = file_get_contents($signing_ca_path);
+  if ($signing_ca_cert) {
+    fputs($user_cert, $signing_ca_cert);
+  }
+  fclose($user_cert);
+}
+
 while($runNumber++ < $numberOfRuns) {
   print "runNumber: $runNumber\n";
 
