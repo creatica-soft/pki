@@ -20,6 +20,9 @@ echo "Installing necessary packages...done"
 echo "Setting timezone to $TZ..."
 doas setup-timezone $TZ
 echo "Setting timezone to $TZ...done"
+echo "Creating /var/www/pki/pki..."
+doas mkdir -p /var/www/pki/pki
+echo "Creating /var/www/pki/pki...done"
 echo "Copying files and folders from pki to /var/www/pki..."
 doas cp -r acme certificates certbot cmp cmp_client crls est est_client lib mswstep msxcep ocsp domains.txt *.html *.php *.ico *.sql /var/www/pki/
 echo "Copying files and folders from pki to /var/www/pki...done"
@@ -65,9 +68,6 @@ echo "Creating /var/log/php$PHP_VER/error.log...done"
 echo "Changing owner of /var/log/php$PHP_VER/error.log to user and group nobody..."
 doas chown nobody:nobody /var/log/php$PHP_VER/error.log
 echo "Changing ownership of /var/log/php$PHP_VER/error.log to user and group nobody...done"
-echo "Creating /var/www/pki/pki..."
-doas mkdir -p /var/www/pki/pki
-echo "Creating /var/www/pki/pki...done"
 echo "Changing permissions for /var/www/pki/certbot/*.sh to 755..."
 doas chmod 755 /var/www/pki/certbot/*.sh
 echo "Changing permissions for /var/www/pki/certbot/*.sh to 755...done"
