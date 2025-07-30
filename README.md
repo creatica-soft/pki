@@ -80,9 +80,11 @@ chmod 755 cleanup.sh
 ./cleanup.sh
 ```
 
-To deploy PKI in a cloud VM, ssh to an alpine-based VM in a cloud, install git, clone this repo, review and update vm.env file and execute vm-create-pki.sh. Run tests locally and remotely. vm-create-pki.sh will attempt to obtain Let's encrypt SSL certificate for your PKI server using it's public DNS name, so that you can access your PKI over Internet with SSL encryption using globally trusted root CA. vm-create-pki.sh script is written to enable only sqlite database, which is sufficient for a single VM. If you really need to run postgres in the same VM, you would need to modify the script. Make sure you expose tcp ports 22, 80 and 443 using security groups.
+To deploy PKI in a cloud VM, ssh to an alpine-based VM in a cloud, install git, clone this repo, review and update vm.env file and execute vm-create-pki.sh. Re-login to update group membership change for alpine user and run tests locally (and remotely). vm-create-pki.sh will attempt to obtain Let's encrypt SSL certificate for your PKI server using it's public DNS name, so that you can access your PKI over Internet with SSL encryption using globally trusted root CA. vm-create-pki.sh script is written to enable only sqlite database, which is sufficient for a single VM. If you really need to run postgres in the same VM, you would need to modify the script. Make sure you expose tcp ports 22, 80 and 443 using security groups.
 
 ```
+doas apk add git
+
 pwd
 /home/alpine
 
@@ -95,6 +97,10 @@ vi vm.env
 chmod 755 vm-create-pki.sh
 
 ./vm-create-pki.sh
+exit
+
+ssh ...
+id
 
 cd /var/www/pki/cmp_client
 php84 tests.php
