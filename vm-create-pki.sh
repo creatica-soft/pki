@@ -240,4 +240,4 @@ echo "Adding user nobody to group mail...done"
 echo "Starting php-fpm$PHP_VER..."
 doas service php-fpm$PHP_VER start
 echo "Starting php-fpm$PHP_VER...done"
-#doas service nginx start
+doas service nginx start
