@@ -112,6 +112,14 @@ cd ../certbot
 ./tests.sh
 ```
 
+To uninstall PKI from the VM, change permissions of vm-undo-pki.sh to 755 and run it.
+
+```
+cd /home/alpine/pki
+chmod 755 vm-undo-pki.sh
+./vm-undo-pki.sh
+```
+
 Openssl version 3 includes RFC4120-compliant CMP client, which has been tested to work with this server.
 Openssl ocsp client has been tested with OCSP server.
 Let's Encrypt Certbot has been tested with ACME server.
