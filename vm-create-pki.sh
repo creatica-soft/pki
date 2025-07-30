@@ -20,6 +20,9 @@ echo "Installing necessary packages...done"
 echo "Setting timezone to $TZ..."
 doas setup-timezone $TZ
 echo "Setting timezone to $TZ...done"
+echo "Copying files and folders from pki to /var/www/pki..."
+doas cp -r acme certificates certbot cmp cmp_client crls est est_client lib mswstep msxcep ocsp domains.txt *.html *.php *.ico *.sql /var/www/pki/
+echo "Copying files and folders from pki to /var/www/pki...done"
 echo "Substituting SMTP_DNS PKI_DNS PHP_VER variables in /etc/php$PHP_VER/php.ini..."
 envsubst '$SMTP_DNS $PKI_DNS $PHP_VER' < etc/php$PHP_VER/php.ini | doas tee /etc/php$PHP_VER/php.ini
 echo "Substituting SMTP_DNS PKI_DNS PHP_VER variables in /etc/php$PHP_VER/php.ini...done"
@@ -29,30 +32,30 @@ echo "Substituting FPM_DNS variable in /etc/php$PHP_VER/php-fpm.d/www.conf...don
 echo "Substituting PKI_DNS variable in /etc/ssl/openssl.cnf..."
 envsubst '$PKI_DNS' < etc/ssl/openssl.cnf | doas tee /etc/ssl/openssl.cnf
 echo "Substituting PKI_DNS variable in /etc/ssl/openssl.cnf...done"
-echo "Substituting DB_DIR variable in acme/globals.php..."
-envsubst '$DB_DIR' < acme/globals.php | tee acme/globals.php
-echo "Substituting DB_DIR variable in acme/globals.php...done"
-echo "Substituting PKI_DNS variable in certbot/certbot.conf..."
-envsubst '$PKI_DNS' < certbot/certbot.conf | tee certbot/certbot.conf
-echo "Substituting PKI_DNS variable in certbot/certbot.conf...done"
-echo "Substituting PKI_DNS TEST_DNS PHP_VER variables in certbot/tests.sh..."
-envsubst '$PKI_DNS $TEST_DNS $PHP_VER' < certbot/tests.sh | tee certbot/tests.sh
-echo "Substituting PKI_DNS TEST_DNS PHP_VER variables in certbot/tests.sh...done"
-echo "Substituting PKI_DNS PHP_VER SIGNING_CA_CN variables in cmp_client/openssl.conf..."
-envsubst '$PKI_DNS $PHP_VER $SIGNING_CA_CN' < cmp_client/openssl.conf | tee cmp_client/openssl.conf
-echo "Substituting PKI_DNS PHP_VER SIGNING_CA_CN variables in cmp_client/openssl.conf...done"
-echo "Substituting PKI_DNS TEST_DNS variables in cmp_client/tests.php..."
-envsubst '$PKI_DNS $TEST_DNS' < cmp_client/tests.php | tee cmp_client/tests.php
-echo "Substituting PKI_DNS TEST_DNS variables in cmp_client/tests.php...done"
-echo "Substituting PKI_DNS TEST_DNS variables in domains.txt..."
-envsubst '$PKI_DNS $TEST_DNS' < domains.txt | tee domains.txt
-echo "Substituting PKI_DNS TEST_DNS variables in domains.txt...done"
-echo "Substituting PKI_DNS variable in est_client/tests.php..."
-envsubst '$PKI_DNS' < est_client/tests.php | tee est_client/tests.php
-echo "Substituting PKI_DNS variable in est_client/tests.php...done"
-echo "Substituting PHP_VER variable in encrypt_pass.php..."
-envsubst '$PHP_VER' < encrypt_pass.php | tee encrypt_pass.php
-echo "Substituting PHP_VER variable in encrypt_pass.php...done"
+echo "Substituting DB_DIR variable in /var/www/pki/acme/globals.php..."
+envsubst '$DB_DIR' < acme/globals.php | tee /var/www/pki/acme/globals.php
+echo "Substituting DB_DIR variable in /var/www/pki/acme/globals.php...done"
+echo "Substituting PKI_DNS variable in /var/www/pki/certbot/certbot.conf..."
+envsubst '$PKI_DNS' < certbot/certbot.conf | tee /var/www/pki/certbot/certbot.conf
+echo "Substituting PKI_DNS variable in /var/www/pki/certbot/certbot.conf...done"
+echo "Substituting PKI_DNS TEST_DNS PHP_VER variables in /var/www/pki/certbot/tests.sh..."
+envsubst '$PKI_DNS $TEST_DNS $PHP_VER' < certbot/tests.sh | tee /var/www/pki/certbot/tests.sh
+echo "Substituting PKI_DNS TEST_DNS PHP_VER variables in /var/www/pki/certbot/tests.sh...done"
+echo "Substituting PKI_DNS PHP_VER SIGNING_CA_CN variables in /var/www/pki/cmp_client/openssl.conf..."
+envsubst '$PKI_DNS $PHP_VER $SIGNING_CA_CN' < cmp_client/openssl.conf | tee /var/www/pki/cmp_client/openssl.conf
+echo "Substituting PKI_DNS PHP_VER SIGNING_CA_CN variables in /var/www/pki/cmp_client/openssl.conf...done"
+echo "Substituting PKI_DNS TEST_DNS variables in /var/www/pki/cmp_client/tests.php..."
+envsubst '$PKI_DNS $TEST_DNS' < cmp_client/tests.php | tee /var/www/pki/cmp_client/tests.php
+echo "Substituting PKI_DNS TEST_DNS variables in /var/www/pki/cmp_client/tests.php...done"
+echo "Substituting PKI_DNS TEST_DNS variables in /var/www/pki/domains.txt..."
+envsubst '$PKI_DNS $TEST_DNS' < domains.txt | tee /var/www/pki/domains.txt
+echo "Substituting PKI_DNS TEST_DNS variables in /var/www/pki/domains.txt...done"
+echo "Substituting PKI_DNS variable in /var/www/pki/est_client/tests.php..."
+envsubst '$PKI_DNS' < est_client/tests.php | tee /var/www/pki/est_client/tests.php
+echo "Substituting PKI_DNS variable in /var/www/pki/est_client/tests.php...done"
+echo "Substituting PHP_VER variable in /var/www/pki/encrypt_pass.php..."
+envsubst '$PHP_VER' < encrypt_pass.php | tee /var/www/pki/encrypt_pass.php
+echo "Substituting PHP_VER variable in /var/www/pki/encrypt_pass.php...done"
 echo "Substituting PKI_DNS FPM_DNS RESOLVER variables in /etc/nginx/http.d/pki.conf..."
 envsubst '$PKI_DNS $FPM_DNS $RESOLVER' < etc/nginx/http.d/pki.conf | doas tee /etc/nginx/http.d/pki.conf
 echo "Substituting PKI_DNS FPM_DNS RESOLVER variables in /etc/nginx/http.d/pki.conf...done"
@@ -65,9 +68,6 @@ echo "Changing ownership of /var/log/php$PHP_VER/error.log to user and group nob
 echo "Creating /var/www/pki/pki..."
 doas mkdir -p /var/www/pki/pki
 echo "Creating /var/www/pki/pki...done"
-echo "Copying files and folders from pki to /var/www/pki..."
-doas cp -r acme certificates certbot cmp cmp_client crls est est_client lib mswstep msxcep ocsp domains.txt *.html *.php *.ico *.sql /var/www/pki/
-echo "Copying files and folders from pki to /var/www/pki...done"
 echo "Changing permissions for /var/www/pki/certbot/*.sh to 755..."
 doas chmod 755 /var/www/pki/certbot/*.sh
 echo "Changing permissions for /var/www/pki/certbot/*.sh to 755...done"
@@ -82,9 +82,9 @@ echo "Creating root CA certificate /etc/ssl/root_ca.pem...done"
 echo "Saving root CA certificate /etc/ssl/root_ca.pem in DER format /etc/ssl/root_ca.der..."
 doas openssl x509 -inform PEM -outform DER -in /etc/ssl/root_ca.pem -out /etc/ssl/root_ca.der
 echo "Saving root CA certificate /etc/ssl/root_ca.pem in DER format /etc/ssl/root_ca.der...done"
-echo "Temporarily changing key size from 2048 to 4096..."
+echo "Temporarily changing key size from 2048 to 4096 in /etc/ssl/openssl.cnf..."
 doas sed -i s/2048/4096/ /etc/ssl/openssl.cnf
-echo "Temporarily changing key size from 2048 to 4096...done"
+echo "Temporarily changing key size from 2048 to 4096 in /etc/ssl/openssl.cnf...done"
 echo "Creating signing CA certificate /etc/ssl/signing_ca.pem..."
 doas openssl req -CA /etc/ssl/root_ca.pem -CAkey /etc/ssl/private/root_ca.key -subj /CN="$SIGNING_CA_CN" -extensions v3_ca_sub -config /etc/ssl/openssl.cnf -days 3650 -out /etc/ssl/signing_ca.pem -keyout /etc/ssl/private/signing_ca.key -noenc
 echo "Creating signing CA certificate /etc/ssl/signing_ca.pem...done"
@@ -94,9 +94,9 @@ echo "Combining signing CA and root CA certificates into a chain /etc/ssl/ca_cha
 echo "Saving signing CA certificate /etc/ssl/signing_ca.pem in DER format /etc/ssl/signing_ca.der..."
 doas openssl x509 -inform PEM -outform DER -in /etc/ssl/signing_ca.pem -out /etc/ssl/signing_ca.der
 echo "Saving signing CA certificate /etc/ssl/signing_ca.pem in DER format /etc/ssl/signing_ca.der...done"
-echo "Restoring key size to 2048..."
+echo "Restoring key size to 2048 in /etc/ssl/openssl.cnf..."
 doas sed -i s/4096/2048/ /etc/ssl/openssl.cnf
-echo "Restoring key size to 2048...done"
+echo "Restoring key size to 2048 in /etc/ssl/openssl.cnf...done"
 echo "Create nginx certificate /etc/ssl/pki.pem..."
 doas openssl req -CA /etc/ssl/signing_ca.pem -CAkey /etc/ssl/private/signing_ca.key -subj /CN=$PKI_DNS -extensions usr_cert -addext "subjectAltName=DNS:$PKI_DNS" -config /etc/ssl/openssl.cnf -days 365 -out /etc/ssl/pki.pem -keyout /etc/ssl/private/pki.key -noenc
 echo "Create nginx certificate /etc/ssl/pki.pem...done"
@@ -177,14 +177,14 @@ echo "Copying root CA and signing CA DER certificates to /var/www/pki/pki..."
 doas cp /etc/ssl/root_ca.der /var/www/pki/pki/root_ca.crt
 doas cp /etc/ssl/signing_ca.der /var/www/pki/pki/signing_ca.crt
 echo "Copying root CA and signing CA DER certificates to /var/www/pki/pki...done"
-echo "To generate CRL for root CA, temporarily changing signing CA to root CA in /etc/ssl/openssl.cnf..."
+echo "Temporarily changing signing CA to root CA in /etc/ssl/openssl.cnf..."
 doas sed -i s/signing_ca.pem/root_ca.pem/g /etc/ssl/openssl.cnf
 doas sed -i s/signing_ca.key/root_ca.key/g /etc/ssl/openssl.cnf
-echo "To generate CRL for root CA, temporarily changing signing CA to root CA in /etc/ssl/openssl.cnf...done"
-echo "To generate CRL for root CA, creating /etc/ssl/index.txt and /etc/ssl/crlnumber..."
+echo "Temporarily changing signing CA to root CA in /etc/ssl/openssl.cnf...done"
+echo "Creating /etc/ssl/index.txt and /etc/ssl/crlnumber..."
 doas touch /etc/ssl/index.txt
 echo 123456789ABCDEF0123456789ABCDEF0123456789ABCDE | doas tee /etc/ssl/crlnumber
-echo "To generate CRL for root CA, creating /etc/ssl/index.txt and /etc/ssl/crlnumber...done"
+echo "Creating /etc/ssl/index.txt and /etc/ssl/crlnumber...done"
 echo "Generating root CA CRL /var/www/pki/pki/root_ca.crl..."
 doas openssl ca -gencrl -out /var/www/pki/pki/root_ca.crl -config /etc/ssl/openssl.cnf -crldays 3650
 echo "Generating root CA CRL /var/www/pki/pki/root_ca.crl...done"
@@ -213,7 +213,7 @@ echo "Changing permissions of $DB_DIR/sqlite to 770...done"
 echo "Changing permissions of $DB_DIR/sqlite/certs.db and $DB_DIR/sqlite/acme.db to 660..."
 doas chmod 660 $DB_DIR/sqlite/certs.db
 doas chmod 660 $DB_DIR/sqlite/acme.db
-echo "Changing permissions of $DB_DIR/sqlite/*.db to 660...done"
+echo "Changing permissions of $DB_DIR/sqlite/certs.db and $DB_DIR/sqlite/acme.db to 660...done"
 echo "Changing work directory to /var/www/pki..."
 cd /var/www/pki
 echo "Changing work directory to /var/www/pki...done"
