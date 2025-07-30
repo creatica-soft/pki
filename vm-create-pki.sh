@@ -36,28 +36,28 @@ echo "Substituting PKI_DNS variable in /etc/ssl/openssl.cnf..."
 envsubst '$PKI_DNS' < etc/ssl/openssl.cnf | doas tee /etc/ssl/openssl.cnf
 echo "Substituting PKI_DNS variable in /etc/ssl/openssl.cnf...done"
 echo "Substituting DB_DIR variable in /var/www/pki/acme/globals.php..."
-envsubst '$DB_DIR' < acme/globals.php | tee /var/www/pki/acme/globals.php
+envsubst '$DB_DIR' < acme/globals.php | doas tee /var/www/pki/acme/globals.php
 echo "Substituting DB_DIR variable in /var/www/pki/acme/globals.php...done"
 echo "Substituting PKI_DNS variable in /var/www/pki/certbot/certbot.conf..."
-envsubst '$PKI_DNS' < certbot/certbot.conf | tee /var/www/pki/certbot/certbot.conf
+envsubst '$PKI_DNS' < certbot/certbot.conf | doas tee /var/www/pki/certbot/certbot.conf
 echo "Substituting PKI_DNS variable in /var/www/pki/certbot/certbot.conf...done"
 echo "Substituting PKI_DNS TEST_DNS PHP_VER variables in /var/www/pki/certbot/tests.sh..."
-envsubst '$PKI_DNS $TEST_DNS $PHP_VER' < certbot/tests.sh | tee /var/www/pki/certbot/tests.sh
+envsubst '$PKI_DNS $TEST_DNS $PHP_VER' < certbot/tests.sh | doas tee /var/www/pki/certbot/tests.sh
 echo "Substituting PKI_DNS TEST_DNS PHP_VER variables in /var/www/pki/certbot/tests.sh...done"
 echo "Substituting PKI_DNS PHP_VER SIGNING_CA_CN variables in /var/www/pki/cmp_client/openssl.conf..."
-envsubst '$PKI_DNS $PHP_VER $SIGNING_CA_CN' < cmp_client/openssl.conf | tee /var/www/pki/cmp_client/openssl.conf
+envsubst '$PKI_DNS $PHP_VER $SIGNING_CA_CN' < cmp_client/openssl.conf | doas tee /var/www/pki/cmp_client/openssl.conf
 echo "Substituting PKI_DNS PHP_VER SIGNING_CA_CN variables in /var/www/pki/cmp_client/openssl.conf...done"
 echo "Substituting PKI_DNS TEST_DNS variables in /var/www/pki/cmp_client/tests.php..."
-envsubst '$PKI_DNS $TEST_DNS' < cmp_client/tests.php | tee /var/www/pki/cmp_client/tests.php
+envsubst '$PKI_DNS $TEST_DNS' < cmp_client/tests.php | doas tee /var/www/pki/cmp_client/tests.php
 echo "Substituting PKI_DNS TEST_DNS variables in /var/www/pki/cmp_client/tests.php...done"
 echo "Substituting PKI_DNS TEST_DNS variables in /var/www/pki/domains.txt..."
-envsubst '$PKI_DNS $TEST_DNS' < domains.txt | tee /var/www/pki/domains.txt
+envsubst '$PKI_DNS $TEST_DNS' < domains.txt | doas tee /var/www/pki/domains.txt
 echo "Substituting PKI_DNS TEST_DNS variables in /var/www/pki/domains.txt...done"
 echo "Substituting PKI_DNS variable in /var/www/pki/est_client/tests.php..."
-envsubst '$PKI_DNS' < est_client/tests.php | tee /var/www/pki/est_client/tests.php
+envsubst '$PKI_DNS' < est_client/tests.php | doas tee /var/www/pki/est_client/tests.php
 echo "Substituting PKI_DNS variable in /var/www/pki/est_client/tests.php...done"
 echo "Substituting PHP_VER variable in /var/www/pki/encrypt_pass.php..."
-envsubst '$PHP_VER' < encrypt_pass.php | tee /var/www/pki/encrypt_pass.php
+envsubst '$PHP_VER' < encrypt_pass.php | doas tee /var/www/pki/encrypt_pass.php
 echo "Substituting PHP_VER variable in /var/www/pki/encrypt_pass.php...done"
 echo "Substituting PKI_DNS FPM_DNS RESOLVER variables in /etc/nginx/http.d/pki.conf..."
 envsubst '$PKI_DNS $FPM_DNS $RESOLVER' < etc/nginx/http.d/pki.conf | doas tee /etc/nginx/http.d/pki.conf
