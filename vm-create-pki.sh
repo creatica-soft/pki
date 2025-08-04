@@ -222,7 +222,7 @@ export LDAP_ENC_PASSWORD=$(php$PHP_VER encrypt_pass.php $LDAP_PASSWORD)
 export PG_ENC_PASSWORD=$(php$PHP_VER encrypt_pass.php $PG_PASSWORD)
 echo "Encrypting LDAP and POSTGRES passwords...done"
 echo "Substituting PKI_DNS LDAP_AUTH LDAP_DNS LDAP_DNS2 LDAP_BINDING_DN OU_USERS OU_SERVICE_ACCOUNTS DB DB_DIR PG_DNS SSL_MODE SSL_ROOT_CERT LDAP_ENC_PASSWORD PG_ENC_PASSWORD variables in lib/config.php..."
-envsubst '$PKI_DNS $LDAP_AUTH $LDAP_DNS $LDAP_DNS2 $LDAP_BINDING_DN $OU_USERS $OU_SERVICE_ACCOUNTS $DB $DB_DIR $PG_DNS $SSL_MODE $SSL_ROOT_CERT $LDAP_ENC_PASSWORD $PG_ENC_PASSWORD' < lib/config.php | doas tee lib/config.php
+envsubst '$PKI_DNS $LDAP_AUTH $LDAP_DNS $LDAP_DNS2 $LDAP_BINDING_DN $OU_USERS $OU_SERVICE_ACCOUNTS $DB $DB_DIR $PG_DNS $SSL_MODE $SSL_ROOT_CERT $LDAP_ENC_PASSWORD $PG_ENC_PASSWORD' < /home/apline/pki/lib/config.php | doas tee lib/config.php
 echo "Substituting PKI_DNS LDAP_AUTH LDAP_DNS LDAP_DNS2 LDAP_BINDING_DN OU_USERS OU_SERVICE_ACCOUNTS DB DB_DIR PG_DNS SSL_MODE SSL_ROOT_CERT LDAP_ENC_PASSWORD PG_ENC_PASSWORD variables in lib/config.php...done"
 echo "Saving nginx private certificate in sqlite database..."
 doas php$PHP_VER save_cert.php /etc/ssl/pki.der

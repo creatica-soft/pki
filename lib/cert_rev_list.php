@@ -10,7 +10,7 @@ class CRL {
   public $signature;
 
   function set() {
-    global $default_signing_alg, $signing_ca_path, $signing_ca_der_path, $signing_ca_privkey_path, $crl_next_update_in_days, $cert_serial_bytes;
+    global $default_signing_alg, $signing_ca_path, $signing_ca_der_path, $signing_ca_privkey_path, $crl_next_update_in_days, $cert_serial_bytes, $now;
     //need to retrieve non-expired revoked certs
     //so first update all certs in db setting status to expired (1) if needed
     sqlUpdateAllCerts();
@@ -20,6 +20,8 @@ class CRL {
       foreach($certs as $cert) {
         if (! is_null($cert['revocationDate']) && $cert['revocationDate'] != 0)
           $revocationDate = date_create_from_format($format = 'U', $datetime = $cert['revocationDate']);
+        else 
+          $revocationDate = date_create_from_format($format = 'U', $datetime = $now->getTimestamp());
         $revCert = new RevokedCert();
         $revCert->set($cert['serial'], $revocationDate);
         $this->tbsCRL->revokedCerts->revokedCerts[] = $revCert;
