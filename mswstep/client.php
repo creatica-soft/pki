@@ -21,30 +21,37 @@ if ($non_ssl_port_disabled)
 else $stream_ctx = null;
 $options = array('soap_version' => SOAP_1_2, 'trace' => true, 'classmap' => $classmap, 'cache_wsdl' => WSDL_CACHE_NONE, 'stream_context' => $stream_ctx);
 $soapClient = new SoapClient("ws-trust-1.3.wsdl", $options);
+//$requestSecurityTokenCollection = new RequestSecurityTokenCollectionType();
 $requestSecurityToken = new RequestSecurityTokenType();
 $requestSecurityToken->TokenType = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509v3';
 $requestSecurityToken->RequestType = 'http://docs.oasis-open.org/ws-sx/ws-trust/200512/Issue';
+$requestSecurityToken->PreferredLanguage = "en-US";
 $requestSecurityToken->BinarySecurityToken = new BinarySecurityTokenType();
+$requestSecurityToken->BinarySecurityToken->xmlns = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd';
 $requestSecurityToken->BinarySecurityToken->EncodingType = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd#base64binary';
 $requestSecurityToken->BinarySecurityToken->ValueType = 'http://schemas.microsoft.com/windows/pki/2009/01/enrollment#PKCS10';
 $requestSecurityToken->BinarySecurityToken->Id = "";
 $requestSecurityToken->BinarySecurityToken->_ = file_get_contents('/tmp/req.pem');
-$requestSecurityToken->PreferredLanguage = "en-US";
 $headers = array();
 $headers[] = new SoapHeader('http://www.w3.org/2005/08/addressing', 'Action', 'http://schemas.microsoft.com/windows/pki/2009/01/enrollment/RST/wstep', true);
 $headers[] = new SoapHeader('http://www.w3.org/2005/08/addressing', 'MessageID', 'urn:uuid:c186db69-3494-4991-ab18-b800d6f2a3fb');
-$headers[] = new SoapHeader('http://www.w3.org/2005/08/addressing', 'To', 'https://pki.example.com/mswstep/', true);
+$headers[] = new SoapHeader('http://www.w3.org/2005/08/addressing', 'To', 'https://pki.creatica.org/mswstep/', true);
 $soapClient->__setSoapHeaders($headers);
 if ($non_ssl_port_disabled)
-  $soapClient->__setLocation('https://pki.example.com/mswstep/');
+  $soapClient->__setLocation('https://pki.creatica.org/mswstep/');
 else 
-  $soapClient->__setLocation('http://pki.example.com/mswstep/');
-$soapClient->RequestSecurityToken($requestSecurityToken);
-//errorLog('Request Headers: ' . $soapClient->__getLastRequestHeaders());
-file_put_contents('/tmp/mswstep-client-request-headers.xml', $soapClient->__getLastRequestHeaders());
-//errorLog('Request: ' . $soapClient->__getLastRequest());
-file_put_contents('/tmp/mswstep-client-request.xml', $soapClient->__getLastRequest());
-//errorLog('Response Headers: ' . $soapClient->__getLastResponseHeaders());
-file_put_contents('/tmp/mswstep-server-response-headers.xml', $soapClient->__getLastResponseHeaders());
-//errorLog('Response: ' . $soapClient->__getLastResponse());
-file_put_contents('/tmp/mswstep-server-response.xml', $soapClient->__getLastResponse());
+  $soapClient->__setLocation('http://pki.creatica.org/mswstep/');
+try {
+  $soapClient->RequestSecurityToken($requestSecurityToken);
+  //errorLog('Request Headers: ' . $soapClient->__getLastRequestHeaders());
+  file_put_contents('/tmp/mswstep-client-request-headers.xml', $soapClient->__getLastRequestHeaders());
+  //errorLog('Request: ' . $soapClient->__getLastRequest());
+  file_put_contents('/tmp/mswstep-client-request.xml', $soapClient->__getLastRequest());
+  //errorLog('Response Headers: ' . $soapClient->__getLastResponseHeaders());
+  file_put_contents('/tmp/mswstep-server-response-headers.xml', $soapClient->__getLastResponseHeaders());
+  //errorLog('Response: ' . $soapClient->__getLastResponse());
+  file_put_contents('/tmp/mswstep-server-response.xml', $soapClient->__getLastResponse());
+}
+catch (SoapFault $fault){
+  throw $fault;
+}

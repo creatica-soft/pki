@@ -9,6 +9,8 @@ class BinarySecurityTokenType { //base64encoded cert, cert bundle, cert req, etc
   public $ValueType; //attribute; for example, http://schemas.microsoft.com/windows/pki/2009/01/enrollment#PKCS10
   public $EncodingType; //attribute, must be set to http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd#base64binary
   public $Id; //attribute, string, empty in ms request example
+  public $xmlns;
+  public $_;
 }
 
 class RequestSecurityTokenType {
@@ -30,15 +32,16 @@ class RequestedSecurityTokenType { //issued or pending cert
 }
 
 class DispositionMessageType {
-  public $lang; //attribute
+  public $_;
+  public $lang; //xml attribute (optional)
 }
 
 class RequestSecurityTokenResponseType {
   public $TokenType; //TokenType (anyURI); http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509v3 in ms example
-  public $DispositionMessage; //DispositionMessageType, string with option lang attribute; "Issued" in ms example
+  public $DispositionMessage; //DispositionMessageType, string with option lang attribute; "Issued" in ms example, xmlns="http://schemas.microsoft.com/windows/pki/2009/01/enrollment"
   public $BinarySecurityToken; //BinarySecurityTokenType - contains issued cert, encoded as in [MS-WCCE] section 2.2.2.8; cert bundle including issued cert in ms example in pkcs 7 pem
   public $RequestedSecurityToken; //RequestedSecurityTokenType; issued single cert in ms example in x509 pem
-  public $RequestID;
+  public $RequestID; //number, xmlns="http://schemas.microsoft.com/windows/pki/2009/01/enrollment"
   public $any;
   public $Context; //attribute, anyURI
 }
@@ -55,7 +58,12 @@ class CertificateEnrollmentWSDetailType { //could be used as part of $server->fa
 }
 
 class ActivityIdType { //soap response header from http://schemas.microsoft.com/2004/09/ServiceModel/Diagnostics namespace
-  public $CorrelationId; //attribute
+  public $CorrelationId; //attribute defined in custom schema
+}
+
+class PasswordType {
+    public $_;  // This holds the text content (e.g., the password value)
+    public $Type;  // This becomes the @Type attribute
 }
 
 class UsernameTokenType {
@@ -69,7 +77,7 @@ class SecurityHeaderType {
 
 class RequestSecurityTokenService {
   public $messageID;
-  public $requestSecurityTokenResponseCollection; //RequestSecurityTokenResponseCollection
+  public $requestSecurityTokenResponseCollection; //RequestSecurityTokenResponseCollectionType
   public $username;
   public $mail;
   
@@ -88,7 +96,7 @@ class RequestSecurityTokenService {
   function To($uri) {
     global $base_url, $wstep_path;
     if ($uri != "$base_url$wstep_path")
-      throw new Exception("mswstep server.php: SOAP header To is not equaled to $base_url$wstep_path (Received: $uri)", 'error');
+      throw new Exception("mswstep server.php: SOAP header To is not equaled to $base_url$wstep_path (Received: $uri)");
   }
   
   function Security($security) {
@@ -111,6 +119,8 @@ class RequestSecurityTokenService {
  
   function RequestSecurityToken($request) {
     global $authentication_enabled, $default_username, $server, $min_key_size, $cert_validity_days, $base_url, $wstep_path, $signing_ca_der_path, $root_ca_der_path, $master_users, $log_level, $default_digest_alg, $allow_user_supplied_emails_in_san;
+    if ($log_level == LOG_DEBUG)
+       errorLog("mswstep server.php: RequestSecurityToken is called...\n", 'info');
     if (! $authentication_enabled)
       $this->username = $default_username;
     if (is_null($this->username))
@@ -126,7 +136,7 @@ class RequestSecurityTokenService {
         if (! is_null($request->BinarySecurityToken->ValueType)) {
           switch ($request->BinarySecurityToken->ValueType) {
             case 'http://schemas.microsoft.com/windows/pki/2009/01/enrollment#PKCS10':
-              $csrDer = base64_decode(str_replace(['&#xD;', '&#13;', "\n"], ['', '', ''], $request->BinarySecurityToken->_));      
+              $csrDer = base64_decode(str_replace(['&#xD;', '&#13;', "\n"], ['', '', ''], $request->BinarySecurityToken->_));
               $csr = new CertificationRequest();
               $csr->decode($csrDer);
             break;
@@ -151,7 +161,9 @@ class RequestSecurityTokenService {
         if (in_array($this->username, $master_users))
           $role = 'master';
         $certTemplate->csr2template($csr, $role);
-        
+        if ($log_level == LOG_DEBUG)
+           errorLog("mswstep server.php: certTemplate->csr2template() is done\n", 'info');
+      
         $certTemplateName = $certTemplate->extensions->getCertificateTemplateName();
         if (! $certTemplateName)
           throw new Exception('RequestSecurityToken() getCertificateTemplateName() returned false');
@@ -161,25 +173,37 @@ class RequestSecurityTokenService {
           $certTemplate->extensions->setSubjectAltName($generalNames, $allow_user_supplied_emails_in_san);    
         }
         
+        if ($log_level == LOG_DEBUG)
+           errorLog("mswstep server.php: creating new cert...\n", 'info');
         $cert = new Certificate();
         $cert->set($certTemplate, $this->username, $defaultExtKeyUsages = false, $role);
+        if ($log_level == LOG_DEBUG)
+           errorLog("mswstep server.php: set certTemplate, username, etc is done\n", 'info');
         $cert->sign();
+        if ($log_level == LOG_DEBUG)
+           errorLog("mswstep server.php: cert is signed\n", 'info');
         $cert->save($status = 0);
+        if ($log_level == LOG_DEBUG)
+           errorLog("mswstep server.php: cert is saved\n", 'info');
         $encodedCert = $cert->encode();
+        if ($log_level == LOG_DEBUG)
+           errorLog("mswstep server.php: cert is encoded\n", 'info');
       
+        if ($log_level == LOG_DEBUG)
+           errorLog("mswstep server.php: creating a response...\n", 'info');
+                   
+        // Create response collection
         $this->requestSecurityTokenResponseCollection = new RequestSecurityTokenResponseCollectionType();
         $this->requestSecurityTokenResponseCollection->RequestSecurityTokenResponse = new RequestSecurityTokenResponseType();
         $this->requestSecurityTokenResponseCollection->RequestSecurityTokenResponse->TokenType = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509v3';
         $this->requestSecurityTokenResponseCollection->RequestSecurityTokenResponse->DispositionMessage = new DispositionMessageType();
         $this->requestSecurityTokenResponseCollection->RequestSecurityTokenResponse->DispositionMessage->_ = 'Issued';
-        $this->requestSecurityTokenResponseCollection->RequestSecurityTokenResponse->BinarySecurityToken = new BinarySecurityTokenType();
-        $this->requestSecurityTokenResponseCollection->RequestSecurityTokenResponse->BinarySecurityToken->ValueType =  'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd#PKCS7';
-        $this->requestSecurityTokenResponseCollection->RequestSecurityTokenResponse->BinarySecurityToken->EncodingType = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd#base64binary';
-
-
+        $this->requestSecurityTokenResponseCollection->RequestSecurityTokenResponse->DispositionMessage->lang = $request->PreferredLanguage ?? 'en-US';
         $contentInfo = new ContentInfo('1.2.840.113549.1.7.2'); //signedData
         $contentInfo->content->contentInfo = new ContentInfo('1.3.6.1.5.5.7.12.3'); //PKIResponse
         $contentInfo->content->contentInfo->content = new PKIResponse(0, 'Issued', openssl_digest($encodedCert, 'sha1'));
+        if ($log_level == LOG_DEBUG)
+           errorLog("mswstep server.php: adding CA certs...\n", 'info');
         $contentInfo->content->certificates = array();
         $contentInfo->content->certificates[0] = new Certificate($root_ca_der_path);
         $contentInfo->content->certificates[1] = new Certificate($signing_ca_der_path);
@@ -190,21 +214,23 @@ class RequestSecurityTokenService {
         $contentInfo->content->signerInfos = new SignerInfos();
         $contentInfo->content->signerInfos->signerInfos[] = new SignerInfo($issuer, $sn, hex2bin($octets));
         $der = $contentInfo->encode();
-
-        $this->requestSecurityTokenResponseCollection->RequestSecurityTokenResponse->BinarySecurityToken->_ = rtrim(chunk_split(base64_encode($der), 64)); //cert bundle
-  
+        $this->requestSecurityTokenResponseCollection->RequestSecurityTokenResponse->BinarySecurityToken = new BinarySecurityTokenType();
+        $this->requestSecurityTokenResponseCollection->RequestSecurityTokenResponse->BinarySecurityToken->ValueType =  'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd#PKCS7';
+        $this->requestSecurityTokenResponseCollection->RequestSecurityTokenResponse->BinarySecurityToken->EncodingType = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd#base64binary';
+        $this->requestSecurityTokenResponseCollection->RequestSecurityTokenResponse->BinarySecurityToken->_ = rtrim(chunk_split(base64_encode($der), 64));
         $this->requestSecurityTokenResponseCollection->RequestSecurityTokenResponse->RequestedSecurityToken = new RequestedSecurityTokenType();
         $this->requestSecurityTokenResponseCollection->RequestSecurityTokenResponse->RequestedSecurityToken->BinarySecurityToken = new BinarySecurityTokenType();
         $this->requestSecurityTokenResponseCollection->RequestSecurityTokenResponse->RequestedSecurityToken->BinarySecurityToken->EncodingType = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd#base64binary';
         $this->requestSecurityTokenResponseCollection->RequestSecurityTokenResponse->RequestedSecurityToken->BinarySecurityToken->ValueType = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509v3'; 
         $this->requestSecurityTokenResponseCollection->RequestSecurityTokenResponse->RequestedSecurityToken->BinarySecurityToken->_ = rtrim(chunk_split(base64_encode($encodedCert), 64)); //issued cert
-
+        if ($log_level == LOG_DEBUG)
+           errorLog("mswstep server.php: creating SOAP header...\n", 'info');
         $header = new SoapHeader('http://www.w3.org/2005/08/addressing', 'Action', 'http://schemas.microsoft.com/windows/pki/2009/01/enrollment/RSTRC/wstep', true); 
         $server->addSoapHeader($header);
-
         $header = new SoapHeader('http://www.w3.org/2005/08/addressing', 'RelatesTo', $this->messageID);
         $server->addSoapHeader($header);
-
+        if ($log_level == LOG_DEBUG)
+           errorLog("mswstep server.php: returning requestSecurityTokenResponseCollection...\n", 'info');
         return $this->requestSecurityTokenResponseCollection;
       } else
         throw new Exception('request is missing BinarySecurityToken');

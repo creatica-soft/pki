@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope" xmlns:ns1="http://www.w3.org/2005/08/addressing" xmlns:ns2="http://docs.oasis-open.org/ws-sx/ws-trust/200512" xmlns:ns3="http://schemas.microsoft.com/windows/pki/2009/01/enrollment" xmlns:ns4="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+  <env:Header>
+    <ns1:Action env:mustUnderstand="true">http://schemas.microsoft.com/windows/pki/2009/01/enrollment/RSTRC/wstep</ns1:Action>
+    <ns1:RelatesTo>urn:uuid:7abbcbb8-1f2d-448f-b5df-02b5e4e83d24</ns1:RelatesTo>
+  </env:Header>
+  <env:Body>
+    <ns2:RequestSecurityTokenResponseCollection>
+      <ns2:RequestSecurityTokenResponse>
+        <ns2:TokenType>http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509v3</ns2:TokenType>
+        <ns3:DispositionMessage xml:lang="en-US">Issued</ns3:DispositionMessage>
+        <ns4:BinarySecurityToken EncodingType="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd#base64binary" ValueType="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd#PKCS7">
+          ...
+        </ns4:BinarySecurityToken>
+        <ns2:RequestedSecurityToken>
+          <ns4:BinarySecurityToken EncodingType="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd#base64binary" ValueType="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509v3">
+            ...
+          </ns4:BinarySecurityToken>
+        </ns2:RequestedSecurityToken>
+      </ns2:RequestSecurityTokenResponse>
+    </ns2:RequestSecurityTokenResponseCollection>
+  </env:Body>
+</env:Envelope>

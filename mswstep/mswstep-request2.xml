@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope" xmlns:ns1="http://docs.oasis-open.org/ws-sx/ws-trust/200512/" xmlns:ns2="http://www.w3.org/2005/08/addressing" xmlns:ns3="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+  <env:Header>
+    <ns2:Action env:mustUnderstand="true">http://schemas.microsoft.com/windows/pki/2009/01/enrollment/RST/wstep</ns2:Action>
+    <ns2:MessageID>urn:uuid:c186db69-3494-4991-ab18-b800d6f2a3fb</ns2:MessageID>
+    <ns2:To env:mustUnderstand="true">https://pki.creatica.org/mswstep/</ns2:To>
+    <ns3:Security env:mustUnderstand="true">
+      <UsernameToken>
+        <Username>username</Username>
+        <Password>
+          <_>123</_>
+          <Type>http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText</Type>
+        </Password>
+      </UsernameToken>
+    </ns3:Security>
+  </env:Header>
+  <env:Body>
+    <RequestSecurityToken PreferredLanguage="en-US" xmlns="http://docs.oasis-open.org/ws-sx/ws-trust/200512/">
+      <TokenType>http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509v3</TokenType>
+      <RequestType>http://docs.oasis-open.org/ws-sx/ws-trust/200512/Issue</RequestType>
+      <BinarySecurityToken xmlns="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" ValueType="http://schemas.microsoft.com/windows/pki/2009/01/enrollment#PKCS10" EncodingType="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd#base64binary" a:Id="" xmlns:a="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+        MIICmTCCAYECAQAwIDEeMBwGA1UEAwwVdGVzdC5leGFtcGxlLmludGVybmFsMIIB
+        IjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlV6ep2xWyQD59pue4zUHaSMc
+        V8mgm6BpKY3XbTZwb7sxypthtX13xcCpl5/UY4qq8egVC1Rsits7+bdKt/G31ZdC
+        L7IkZWJ3pgvwEJvjCvbblk01FdRR0X5/h984suPVA6gF2U60ssbQTWw9+T20ywqj
+        qRJzI+JZxxCOTEy3YhmCT/ay6YsjhVOwi7nEw426fDQZ44TjJMifPCuST5L/EnjE
+        LWVZoy3DFNHUJ0Ezp6BUnxclWJ0LQ+lTghVLnYapuXdjlqhfnGdxnZe1aqMJwSfA
+        gUhXrCRi0He9g8W3Lzqoi7X2PrTwYtwPVFJNEq6eJHJHlFWeQ8nCJoLgjFPObwID
+        AQABoDQwMgYJKoZIhvcNAQkOMSUwIzAhBgNVHREEGjAYghZ0ZXN0Mi5leGFtcGxl
+        LmludGVybmFsMA0GCSqGSIb3DQEBCwUAA4IBAQAZtEBf713pNIClB7QkDGNzYrlP
+        u9kZiQV0PnqGEVVnJoifLRbR+PvMqCG36lO1SOr0RVkbfkqeuvYACPxy9Et88BtT
+        n+KrqLY8xlW11Jm0oHDy44UiOEDYFb8iHGjyjCBvBS/sZliGmvydGBKxj1W7tD70
+        WDCntQI4encRC4aepa3N5iaEGiP5yf6y53pBSSL6awUBA/2HOUBQe7gy/9axWeHD
+        O7/sD9+43Wxqop/rrGYVf0f/jgp9VdwHeHziaxRfvWD3y+G4N7VTn6UFtzLmtiHS
+        W1PshF62/SjAd75pJAmRr0G/fQdtTHRw3KCefhGIjEx0NPlIDpBoJk6asDFu
+      </BinarySecurityToken>
+    </RequestSecurityToken>
+  </env:Body>
+</env:Envelope>

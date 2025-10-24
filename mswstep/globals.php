@@ -3,7 +3,7 @@ require_once "config.php";
 $log_level = LOG_ERR; //options are LOG_ERR, LOG_INFO and LOG_DEBUG
 $authentication_enabled = true;
 $default_username = 'username'; //for testing when authentication_enabled is false
-$non_ssl_port_disabled = true; //set to false for connecting to non-SSL port for testing only!
+$non_ssl_port_disabled = false; //set to false for connecting to non-SSL port for testing only!
 $signed_data_version = 3; //in MS examples it is 3 but probably should be 4
 $wstep_path = '/mswstep/';
 $content_type = 'application/soap+xml; charset=utf-8';

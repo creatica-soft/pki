@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://schemas.microsoft.com/windows/pki/2009/01/enrollment"
+           xmlns:enroll="http://schemas.microsoft.com/windows/pki/2009/01/enrollment"
+           elementFormDefault="qualified">
+
+  <xs:complexType name="DispositionMessageType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute ref="xml:lang" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name="DispositionMessage" type="enroll:DispositionMessageType"/>
+  <xs:element name="RequestID" type="xs:nonNegativeInteger"/>
+</xs:schema>
+
