@@ -62,7 +62,7 @@ if (!str_starts_with(trim($request), '<?xml')) {
     $request = '<?xml version="1.0" encoding="UTF-8"?>' . $request;
 }
 //file_put_contents('/tmp/mswstep-request.xml', $request);
-/ob_start('parse'); 
+//ob_start('parse'); 
 $server = new SoapServer('ws-trust-1.3.wsdl', array('soap_version' => SOAP_1_2, 'classmap' => $classmap, 'cache_wsdl' => WSDL_CACHE_NONE, 'keep_alive' => false, 'exceptions' => true, 'uri' => "$base_url$wstep_path"));
 $server->setClass('RequestSecurityTokenService');
 $server->handle();
